@@ -1,14 +1,22 @@
 [profile.default]
 src = "src"
+script = "scripts"
 out = "out"
 libs = ["lib"]
 ffi = true
 ast = true
 build_info = true
 extra_output = ["storageLayout"]
+fs_permissions = [
+  { access='read', path='./configs' },
+  { access='read', path='./test' },
+  { access='write', path='./deployment.json' }
+]
 
 [rpc_endpoints]
-sepolia = "${SEPOLIA_RPC_URL}"
+"sepolia" = "${SEPOLIA_RPC_URL}"
+"sepolia/op" = "https://sepolia.optimism.io"
+"sepolia/worldchain" = "https://worldchain-sepolia.g.alchemy.com/public"
  
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }

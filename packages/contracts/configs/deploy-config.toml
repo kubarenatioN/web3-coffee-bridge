@@ -1,0 +1,11 @@
+[deploy_config]
+salt = "CoffeeToken L2 v1.0.0"
+chains = ["sepolia/op","sepolia/worldchain"]
+
+[token]
+owner_address = "0xeca102a0E8755cAC155cE219B7051db53D012dF2"
+name = "CoffeeToken"
+symbol = "COFFEE"
+decimals = 18
+bridge = "0x4200000000000000000000000000000000000010"
+remote_token = "0xaB95e0280eA9c3dCF906eecD4A40Cba079475307"
