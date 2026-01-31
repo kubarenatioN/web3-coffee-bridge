@@ -1,6 +1,6 @@
 [deploy_config]
 salt = "CoffeeToken L2 v1.0.0"
-chains = ["sepolia/op","sepolia/worldchain"]
+chains = ["sepolia/unichain"]
 
 [token]
 owner_address = "0xeca102a0E8755cAC155cE219B7051db53D012dF2"

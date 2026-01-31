@@ -17,6 +17,7 @@ fs_permissions = [
 "sepolia" = "${SEPOLIA_RPC_URL}"
 "sepolia/op" = "https://sepolia.optimism.io"
 "sepolia/worldchain" = "https://worldchain-sepolia.g.alchemy.com/public"
+"sepolia/unichain" = "https://sepolia.unichain.org"
  
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
