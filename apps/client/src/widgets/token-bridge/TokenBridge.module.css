@@ -1,0 +1,13 @@
+.select-trigger {
+  width: 100%;
+}
+
+.token-item {
+  padding: 12px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+.token-item:hover {
+  background-color: #f0f0f0;
+}
