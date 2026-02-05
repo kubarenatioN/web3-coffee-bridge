@@ -11,32 +11,29 @@ function TokenBridge() {
   const [selectedToken, setSelectedToken] = useState<string>(BRIDGE_TOKENS[0].key);
   const [amount, setAmount] = useState<string>('');
 
-  const handleAmountChange = useCallback(
-    (value: string) => {
-      const result = InputHelpers.formatNumericInput(value);
+  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const result = InputHelpers.formatNumericInput(value);
 
-      if (typeof result === 'string') {
-        setAmount(result);
-      }
-    },
-    [setAmount]
-  );
+    if (typeof result === 'string') {
+      setAmount(result);
+    }
+  }, []);
 
-  const formatAmountOnBlur = useCallback(
-    (value: string) => {
-      if (!value) {
-        return;
-      }
-      if (value === '.') {
-        setAmount('0');
-      } else if (value.startsWith('.')) {
-        setAmount(`0${value}`);
-      } else if (value.endsWith('.')) {
-        setAmount(`${value}0`);
-      }
-    },
-    [setAmount]
-  );
+  const formatAmountOnBlur = useCallback((e: React.FocusEvent<HTMLInputElement, Element>) => {
+    const value = e.target.value;
+
+    if (!value) {
+      return;
+    }
+    if (value === '.') {
+      setAmount('0');
+    } else if (value.startsWith('.')) {
+      setAmount(`0${value}`);
+    } else if (value.endsWith('.')) {
+      setAmount(`${value}0`);
+    }
+  }, []);
 
   const handleSendTokens = useCallback((amount: string, selectedToken: string) => {
     console.log(amount, selectedToken);
@@ -60,14 +57,14 @@ function TokenBridge() {
         }}
         width={'100%'}
       >
-        <input type='text' />
         <TextField.Root
           placeholder='1.25'
           variant='soft'
           size='3'
           value={amount}
-          onChange={(e) => handleAmountChange(e.target.value)}
-          onBlur={(e) => formatAmountOnBlur(e.target.value)}
+          name='amount'
+          onChange={handleAmountChange}
+          onBlur={formatAmountOnBlur}
         >
           <TextField.Slot side='right'>
             <Flex align={'center'} gap={'2'}>

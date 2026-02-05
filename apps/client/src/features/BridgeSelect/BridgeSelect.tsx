@@ -2,7 +2,7 @@ import { CHAINS } from '@/shared/config/chains';
 import type { ChainType } from '@/shared/types/chains.types';
 import { Box, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
 import { ArrowRightLeft } from 'lucide-react';
-import { useReducer } from 'react';
+import { memo, useReducer } from 'react';
 import styles from './BridgeSelect.module.css';
 import { chainsReducer } from './reducers';
 
@@ -92,4 +92,4 @@ function BridgeSelect() {
   );
 }
 
-export default BridgeSelect;
+export default memo(BridgeSelect);
