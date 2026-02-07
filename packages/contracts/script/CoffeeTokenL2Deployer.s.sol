@@ -71,16 +71,22 @@ contract CoffeeTokenL2Deployer is Script {
             deployConfig,
             ".token.symbol"
         );
+
         uint256 decimals = vm.parseTomlUint(deployConfig, ".token.decimals");
         require(decimals <= type(uint8).max, "decimals exceeds uint8 range");
+
         bytes memory initCode = abi.encodePacked(
             type(CoffeeTokenL2).creationCode,
-            abi.encode(ownerAddr_, name, symbol, uint8(decimals))
+            abi.encode(bridge, remoteToken, ownerAddr_, name, symbol)
         );
+
         address preComputedAddress = vm.computeCreate2Address(
             _implSalt(),
             keccak256(initCode)
         );
+
+        console.log("Precomputed address: %s", preComputedAddress);
+
         if (preComputedAddress.code.length > 0) {
             console.log(
                 "CoffeeToken already deployed at %s",

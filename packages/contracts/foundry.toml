@@ -1,4 +1,7 @@
 [profile.default]
+solc = "0.8.30"
+auto_detect_solc = false
+evm_version = "prague"
 src = "src"
 script = "scripts"
 out = "out"
@@ -6,6 +9,11 @@ libs = ["lib"]
 ffi = true
 ast = true
 build_info = true
+
+# Disable metadata hash for deterministic bytecode
+bytecode_hash = "none"
+cbor_metadata = false
+
 extra_output = ["storageLayout"]
 fs_permissions = [
   { access='read', path='./configs' },
@@ -18,6 +26,7 @@ fs_permissions = [
 "sepolia/op" = "https://sepolia.optimism.io"
 "sepolia/worldchain" = "https://worldchain-sepolia.g.alchemy.com/public"
 "sepolia/unichain" = "https://sepolia.unichain.org"
+"sepolia/base" = "https://sepolia.base.org"
  
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
