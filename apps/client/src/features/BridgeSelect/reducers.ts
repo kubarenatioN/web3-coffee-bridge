@@ -3,10 +3,8 @@ import type { ChainsReducerState } from './models';
 
 export function chainsReducer(
   state: ChainsReducerState,
-  action: { type: 'set_source_chain' | 'set_destination_chain'; chain: ChainType }
+  action: { type: 'set_source_chain' | 'set_destination_chain'; chain: ChainType },
 ) {
-  console.log(state, action);
-
   switch (action.type) {
     case 'set_source_chain': {
       if (action.chain === state.destinationChain) {
@@ -36,7 +34,8 @@ export function chainsReducer(
       };
     }
     default: {
-      throw Error('Unknown action.');
+      console.warn('chainsReducer: Unknown action.');
+      return state;
     }
   }
 }

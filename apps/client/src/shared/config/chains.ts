@@ -15,8 +15,8 @@ export const L2_CHAINS = [
     name: 'Worldchain Sepolia',
   },
   {
-    key: 'uni-sepolia',
-    name: 'UniChain Sepolia',
+    key: 'base-sepolia',
+    name: 'Base Sepolia',
   },
 ] as const;
 

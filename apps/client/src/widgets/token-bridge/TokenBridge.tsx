@@ -1,26 +1,26 @@
 import BridgeSelect from '@/features/BridgeSelect/BridgeSelect';
 import { BRIDGE_TOKENS, BRIDGE_TOKENS_MAP } from '@/shared/config/tokens';
 import { InputHelpers } from '@/shared/helpers/input.helpers';
-import { Box, Button, Dialog, Flex, Heading, Text, TextField } from '@radix-ui/themes';
+import { Box, Button, Dialog, Flex, Heading, Inset, Text, TextField } from '@radix-ui/themes';
 import { Delete } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import styles from './TokenBridge.module.css';
 
 function TokenBridge() {
   const [selectTokenDialogOpen, setSelectTokenDialogOpen] = useState(false);
-  const [selectedToken, setSelectedToken] = useState<string>(BRIDGE_TOKENS[0].key);
+  const [selectedToken, setSelectedToken] = useState<string>(BRIDGE_TOKENS[0].name);
   const [amount, setAmount] = useState<string>('');
 
-  const handleAmountChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const result = InputHelpers.formatNumericInput(value);
 
     if (typeof result === 'string') {
       setAmount(result);
     }
-  }, []);
+  };
 
-  const formatAmountOnBlur = useCallback((e: React.FocusEvent<HTMLInputElement, Element>) => {
+  const formatAmountOnBlur = (e: React.FocusEvent<HTMLInputElement, Element>) => {
     const value = e.target.value;
 
     if (!value) {
@@ -33,11 +33,13 @@ function TokenBridge() {
     } else if (value.endsWith('.')) {
       setAmount(`${value}0`);
     }
-  }, []);
+  };
 
-  const handleSendTokens = useCallback((amount: string, selectedToken: string) => {
-    console.log(amount, selectedToken);
-  }, []);
+  const bridgeERC20 = (amount: string, token: string) => {
+    console.log(amount, token);
+  };
+
+  const _selectedTokenData = BRIDGE_TOKENS_MAP.get(selectedToken);
 
   return (
     <Flex direction={'column'} gap={'4'}>
@@ -86,19 +88,33 @@ function TokenBridge() {
                   variant='soft'
                   onClick={() => setSelectTokenDialogOpen(true)}
                 >
-                  {BRIDGE_TOKENS_MAP.get(selectedToken)?.symbol}
+                  <Flex asChild align={'center'} gap={'1'}>
+                    <span>
+                      <img
+                        src={_selectedTokenData?.icon}
+                        alt={_selectedTokenData?.name}
+                        width={22}
+                        height={22}
+                        style={{
+                          borderRadius: '50%',
+                          backgroundColor: '#fff',
+                        }}
+                      />
+                      {_selectedTokenData?.symbol}
+                    </span>
+                  </Flex>
                 </Button>
               </Box>
             </Flex>
           </TextField.Slot>
         </TextField.Root>
-        <Text size='2' color='gray'>
+        <Text size='1' color='gray'>
           =$120.45
         </Text>
       </Flex>
 
       <Box alignSelf={'center'}>
-        <Button size={'3'} onClick={() => handleSendTokens(amount, selectedToken)}>
+        <Button size={'3'} onClick={() => bridgeERC20(amount, selectedToken)}>
           Send
         </Button>
       </Box>
@@ -108,29 +124,42 @@ function TokenBridge() {
           <Dialog.Title mb={'2'}>Select a token</Dialog.Title>
           <Dialog.Description>Select a token you want to bridge</Dialog.Description>
 
-          <Flex direction={'column'} gap={'2'} mt={'4'}>
-            {BRIDGE_TOKENS.map((t) => {
-              return (
-                <Flex
-                  className={styles['token-item']}
-                  key={t.key}
-                  onClick={() => {
-                    setSelectedToken(t.key);
-                    setSelectTokenDialogOpen(false);
-                  }}
-                  align={'center'}
-                  gap={'1'}
-                >
-                  <Text weight={'medium'} size={'4'}>
-                    {t.symbol}
-                  </Text>
-                  <Text size={'3'} color='gray'>
-                    {t.name}
-                  </Text>
-                </Flex>
-              );
-            })}
-          </Flex>
+          <Inset mt={'4'} side={'x'}>
+            <Flex direction={'column'} px={'1'}>
+              {BRIDGE_TOKENS.map((t) => {
+                return (
+                  <Flex
+                    className={styles['token-item']}
+                    key={t.name}
+                    onClick={() => {
+                      setSelectedToken(t.name);
+                      setSelectTokenDialogOpen(false);
+                    }}
+                    align={'center'}
+                    gap={'1'}
+                  >
+                    <img
+                      style={{
+                        borderRadius: '50%',
+                        backgroundColor: '#fff',
+                        boxShadow: '0px 0px 2px 1px rgb(134 134 134 / 70%)',
+                      }}
+                      src={t.icon}
+                      alt={t.name}
+                      width={24}
+                      height={24}
+                    />
+                    <Text weight={'medium'} size={'4'}>
+                      {t.symbol}
+                    </Text>
+                    <Text size={'3'} color='gray' ml={'auto'}>
+                      {t.name}
+                    </Text>
+                  </Flex>
+                );
+              })}
+            </Flex>
+          </Inset>
         </Dialog.Content>
       </Dialog.Root>
     </Flex>

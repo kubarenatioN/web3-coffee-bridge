@@ -19,16 +19,12 @@ function BridgeSelect() {
   return (
     <Grid
       areas={{
-        initial: '"swap swap" "source destination"',
+        initial: '"source destination"',
         xs: '"source swap destination"',
       }}
       columns={{
         initial: 'repeat(2, minmax(0, 1fr))',
         xs: 'minmax(0, 1fr) min-content minmax(0, 1fr)',
-      }}
-      rows={{
-        initial: 'auto auto',
-        xs: 'auto',
       }}
       align={'center'}
       gap={'2'}
@@ -58,7 +54,15 @@ function BridgeSelect() {
         </Select.Root>
       </Box>
 
-      <Flex gridArea={'swap'} justify={'center'} align={'center'}>
+      <Flex
+        gridArea={'swap'}
+        justify={'center'}
+        align={'center'}
+        display={{
+          initial: 'none',
+          xs: 'flex',
+        }}
+      >
         <IconButton size={'2'} variant='outline' radius='full'>
           <ArrowRightLeft size={14} />
         </IconButton>
