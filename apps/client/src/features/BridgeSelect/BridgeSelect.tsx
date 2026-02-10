@@ -2,17 +2,29 @@ import { CHAINS } from '@/shared/config/chains';
 import type { ChainType } from '@/shared/types/chains.types';
 import { Box, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
 import { ArrowRightLeft } from 'lucide-react';
-import { memo, useReducer } from 'react';
+import { memo, useEffect, useReducer } from 'react';
 import styles from './BridgeSelect.module.css';
+import type { ChainsSelection } from './models';
 import { chainsReducer } from './reducers';
+
+interface BridgeSelectProps {
+  onSelect: (data: ChainsSelection) => void;
+}
 
 const chainsMap = new Map(CHAINS.map((chain) => [chain.key, chain]));
 
-function BridgeSelect() {
+function BridgeSelect({ onSelect }: BridgeSelectProps) {
   const [chainsState, dispatchChain] = useReducer(chainsReducer, {
-    sourceChain: 'op-sepolia',
-    destinationChain: 'worldchain-sepolia',
+    sourceChain: 'ethereum-sepolia',
+    destinationChain: 'op-sepolia',
   });
+
+  useEffect(() => {
+    onSelect({
+      sourceChain: chainsState.sourceChain,
+      destinationChain: chainsState.destinationChain,
+    });
+  }, [onSelect, chainsState]);
 
   const { sourceChain, destinationChain } = chainsState;
 

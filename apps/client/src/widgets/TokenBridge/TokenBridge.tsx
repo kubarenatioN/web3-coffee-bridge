@@ -1,15 +1,38 @@
-import BridgeSelect from '@/features/BridgeSelect/BridgeSelect';
+import { L1_STANDARD_BRIDGE_ABI } from '@/contracts/abi/L1StandardBridge.abi';
+import { STANDARD_BRIDGE_ADDRESS } from '@/contracts/config';
+import { BridgeSelect, type ChainsSelection } from '@/features/BridgeSelect';
+import { CHAINS } from '@/shared/config/chains';
 import { BRIDGE_TOKENS, BRIDGE_TOKENS_MAP } from '@/shared/config/tokens';
+import { isL1Chain } from '@/shared/helpers/chain.helper';
 import { InputHelpers } from '@/shared/helpers/input.helpers';
 import { Box, Button, Dialog, Flex, Heading, Inset, Text, TextField } from '@radix-ui/themes';
 import { Delete } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import { BaseError, useChainId, useSwitchChain, useWriteContract } from 'wagmi';
 import styles from './TokenBridge.module.css';
 
 function TokenBridge() {
   const [selectTokenDialogOpen, setSelectTokenDialogOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState<string>(BRIDGE_TOKENS[0].name);
+  const [selectedChains, setSelectedChains] = useState<ChainsSelection>({} as ChainsSelection);
   const [amount, setAmount] = useState<string>('');
+  const writeContract = useWriteContract();
+
+  const { mutate: writeContractMutate } = writeContract;
+
+  const currentChainId = useChainId();
+  const switchChain = useSwitchChain();
+
+  useEffect(
+    () => {
+      if (writeContract.error) {
+        writeContract.reset();
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [amount, selectedChains, selectedToken],
+  );
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -35,20 +58,95 @@ function TokenBridge() {
     }
   };
 
-  const bridgeERC20 = (amount: string, token: string) => {
-    console.log(amount, token);
+  const handleChainsSelect = useCallback((data: ChainsSelection) => {
+    setSelectedChains(data);
+  }, []);
+
+  const submitBridge = async (amount: string, token: string) => {
+    const tokenData = BRIDGE_TOKENS_MAP.get(token);
+    const tokenChains = tokenData?.tokens;
+
+    if (!tokenChains) {
+      toast.error('Token chains not found');
+      return;
+    }
+
+    const sourceChain = CHAINS.find((c) => c.key === selectedChains.sourceChain);
+    const destinationChain = CHAINS.find((c) => c.key === selectedChains.destinationChain);
+
+    if (!sourceChain || !destinationChain) {
+      toast.error('Chain not found');
+      return;
+    }
+
+    const isSourceChainL1 = isL1Chain(sourceChain.key);
+    const isDestinationChainL1 = isL1Chain(destinationChain.key);
+
+    if (isSourceChainL1 && isDestinationChainL1) {
+      toast.error('Cannot bridge between L1 chains');
+      return;
+    }
+
+    if (!isSourceChainL1 && !isDestinationChainL1) {
+      toast.error('Cannot bridge between L2 chains (temporary)');
+      return;
+    }
+
+    const sourceAddress = isSourceChainL1
+      ? tokenChains[sourceChain.key]?.address
+      : tokenChains[destinationChain.key]?.address;
+    const targetAddress = isSourceChainL1
+      ? tokenChains?.[destinationChain.key]?.address
+      : tokenChains?.[sourceChain.key]?.address;
+
+    if (!sourceAddress || !targetAddress) {
+      toast.error('Token not found');
+      return;
+    }
+
+    const l1Address = isSourceChainL1 ? sourceAddress : targetAddress;
+    const l2Address = isSourceChainL1 ? targetAddress : sourceAddress;
+    const bridgeAddress = STANDARD_BRIDGE_ADDRESS?.[sourceChain.key]?.[destinationChain.key];
+
+    if (!bridgeAddress) {
+      toast.error('Bridge address not found');
+      return;
+    }
+
+    // switch the chain
+    if (currentChainId !== sourceChain.id) {
+      await switchChain.mutateAsync({
+        chainId: sourceChain.id,
+      });
+    }
+
+    const amountWei = BigInt(amount) * 10n ** 18n;
+
+    writeContractMutate(
+      {
+        address: bridgeAddress,
+        abi: L1_STANDARD_BRIDGE_ABI,
+        functionName: 'bridgeERC20',
+        args: [l1Address, l2Address, amountWei, 21_000, '0x'],
+      },
+      {
+        onSuccess: () => {
+          toast.success('Transaction submitted', { autoClose: 3000 });
+        },
+      },
+    );
   };
 
   const _selectedTokenData = BRIDGE_TOKENS_MAP.get(selectedToken);
 
   return (
-    <Flex direction={'column'} gap={'4'}>
+    <Flex direction={'column'} gap={'6'}>
       <Flex direction={'column'}>
-        <Heading>Token Bridge</Heading>
+        <Heading as='h2'>Token Bridge</Heading>
         <Text>Choose source and destination chains and make a transfer</Text>
       </Flex>
 
-      <BridgeSelect />
+      <BridgeSelect onSelect={handleChainsSelect} />
 
       <Flex
         direction='column'
@@ -111,13 +209,22 @@ function TokenBridge() {
         <Text size='1' color='gray'>
           =$120.45
         </Text>
-      </Flex>
 
-      <Box alignSelf={'center'}>
-        <Button size={'3'} onClick={() => bridgeERC20(amount, selectedToken)}>
-          Send
-        </Button>
-      </Box>
+        <Flex direction={'column'} alignSelf={'start'} height={'20px'} mt={'1'}>
+          {writeContract.error && (
+            <Text size='2' color='red'>
+              Error:{' '}
+              {(writeContract.error as BaseError)?.shortMessage || writeContract.error.message}
+            </Text>
+          )}
+        </Flex>
+
+        <Box alignSelf={'center'} pt={'1'}>
+          <Button size={'3'} onClick={() => submitBridge(amount, selectedToken)}>
+            Send
+          </Button>
+        </Box>
+      </Flex>
 
       <Dialog.Root open={selectTokenDialogOpen} onOpenChange={setSelectTokenDialogOpen}>
         <Dialog.Content maxWidth={'480px'}>

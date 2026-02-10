@@ -1,0 +1,5 @@
+.header_wrapper {
+  box-shadow: 0 0 4px 1px rgb(131 131 131 / 48%);
+  position: relative;
+  z-index: 2;
+}

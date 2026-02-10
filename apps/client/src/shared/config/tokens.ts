@@ -1,4 +1,15 @@
-export const BRIDGE_TOKENS = [
+import type { ChainType } from '../types/chains.types';
+
+interface Token {
+  name: string;
+  symbol: string;
+  decimals: number;
+  icon?: string;
+  native?: boolean;
+  tokens?: Partial<Record<ChainType, { address: string }>>;
+}
+
+export const BRIDGE_TOKENS: Token[] = [
   {
     name: 'Ethereum',
     symbol: 'ETH',
@@ -12,15 +23,12 @@ export const BRIDGE_TOKENS = [
     decimals: 18,
     icon: 'https://ethereum-optimism.github.io/data/PEPE/logo.svg',
     tokens: {
-      ethereum: {
-        address: '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
+      'ethereum-sepolia': {
+        address: '??',
       },
-      op: {
-        address: '0xc1c167cc44f7923cd0062c4370df962f9ddb16f5',
-      },
-      base: {
-        address: '0xb4fde59a779991bfb6a52253b51947828b982be3',
-      },
+      // ethereum: {
+      //   address: '0x6982508145454Ce325dDbE47a25d4ec3d2311933',
+      // },
     },
   },
   {
@@ -33,13 +41,13 @@ export const BRIDGE_TOKENS = [
         address: '0xab95e0280ea9c3dcf906eecd4a40cba079475307',
       },
       'op-sepolia': {
-        address: '0xA366D3D9F564FF49A0862448dE49cF3fbe512aF9',
+        address: '0x567E771017e5F7daD7C2db3721b07B501cd7952c',
       },
       'worldchain-sepolia': {
-        address: '0xA366D3D9F564FF49A0862448dE49cF3fbe512aF9',
+        address: '0x567E771017e5F7daD7C2db3721b07B501cd7952c',
       },
-      'uni-sepolia': {
-        address: '0xA366D3D9F564FF49A0862448dE49cF3fbe512aF9',
+      'base-sepolia': {
+        address: '0x567E771017e5F7daD7C2db3721b07B501cd7952c',
       },
     },
   },
