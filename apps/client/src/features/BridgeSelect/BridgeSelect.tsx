@@ -4,7 +4,7 @@ import { Box, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
 import { ArrowRightLeft } from 'lucide-react';
 import { memo, useEffect, useReducer } from 'react';
 import styles from './BridgeSelect.module.css';
-import type { ChainsSelection } from './models';
+import type { ChainsReducerState, ChainsSelection } from './models';
 import { chainsReducer } from './reducers';
 
 interface BridgeSelectProps {
@@ -17,7 +17,7 @@ function BridgeSelect({ onSelect }: BridgeSelectProps) {
   const [chainsState, dispatchChain] = useReducer(chainsReducer, {
     sourceChain: 'ethereum-sepolia',
     destinationChain: 'op-sepolia',
-  });
+  } as ChainsReducerState);
 
   useEffect(() => {
     onSelect({
