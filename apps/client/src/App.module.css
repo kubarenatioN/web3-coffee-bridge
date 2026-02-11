@@ -1,0 +1,14 @@
+.toast {
+  --toastify-toast-width: 320px;
+  border-radius: 12px;
+}
+
+.toast-container {
+  padding: 0 5px 5px;
+}
+
+@media screen and (min-width: 480px) {
+  .toast {
+    --toastify-toast-width: 360px;
+  }
+}

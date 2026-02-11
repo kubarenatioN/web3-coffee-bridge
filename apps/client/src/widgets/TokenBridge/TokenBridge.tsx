@@ -1,3 +1,4 @@
+import { IERC20_ABI } from '@/contracts/abi/IERC20.abi';
 import { L1_STANDARD_BRIDGE_ABI } from '@/contracts/abi/L1StandardBridge.abi';
 import { STANDARD_BRIDGE_ADDRESS } from '@/contracts/config';
 import { BridgeSelect, type ChainsSelection } from '@/features/BridgeSelect';
@@ -5,11 +6,25 @@ import { CHAINS } from '@/shared/config/chains';
 import { BRIDGE_TOKENS, BRIDGE_TOKENS_MAP } from '@/shared/config/tokens';
 import { isL1Chain } from '@/shared/helpers/chain.helper';
 import { InputHelpers } from '@/shared/helpers/input.helpers';
-import { Box, Button, Dialog, Flex, Heading, Inset, Text, TextField } from '@radix-ui/themes';
+import { config } from '@/wagmi.config';
+import {
+  Box,
+  Button,
+  Dialog,
+  Flex,
+  Heading,
+  Inset,
+  Spinner,
+  Text,
+  TextField,
+  Tooltip,
+} from '@radix-ui/themes';
 import { Delete } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { BaseError, useChainId, useSwitchChain, useWriteContract } from 'wagmi';
+import { encodeFunctionData, formatEther } from 'viem';
+import { BaseError, useChainId, useConnection, useSwitchChain, useWriteContract } from 'wagmi';
+import { estimateFeesPerGas, estimateGas } from 'wagmi/actions';
 import styles from './TokenBridge.module.css';
 
 function TokenBridge() {
@@ -18,6 +33,22 @@ function TokenBridge() {
   const [selectedChains, setSelectedChains] = useState<ChainsSelection>({} as ChainsSelection);
   const [amount, setAmount] = useState<string>('');
   const writeContract = useWriteContract();
+  const connection = useConnection();
+
+  const [feeState, setFeeState] = useState<{ value: string; isPending: boolean }>({
+    value: '',
+    isPending: false,
+  });
+
+  const sourceChain = CHAINS.find((c) => c.key === selectedChains.sourceChain);
+
+  const bridgeAddress = sourceChain
+    ? STANDARD_BRIDGE_ADDRESS?.[sourceChain.key]?.[selectedChains.destinationChain]
+    : undefined;
+
+  const amountWei = useMemo(() => {
+    return amount ? BigInt(amount) * 10n ** 18n : 0n;
+  }, [amount]);
 
   const { mutate: writeContractMutate } = writeContract;
 
@@ -33,6 +64,63 @@ function TokenBridge() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [amount, selectedChains, selectedToken],
   );
+
+  const calculateFees = async () => {
+    setFeeState({ ...feeState, value: '' });
+
+    if (!sourceChain || !bridgeAddress || !amountWei) {
+      return;
+    }
+
+    const txData = prepareBridgeTransactionData(selectedToken, selectedChains);
+    if (!txData) {
+      return;
+    }
+
+    const { l1Address, l2Address } = txData;
+
+    if (!l1Address || !l2Address) {
+      return;
+    }
+
+    setFeeState({ ...feeState, isPending: true });
+
+    const localAddress = isL1Chain(sourceChain.key) ? l1Address : l2Address;
+
+    const gasERC20Approve = await estimateGas(config, {
+      to: localAddress as `0x${string}`,
+      data: encodeFunctionData({
+        abi: IERC20_ABI,
+        functionName: 'approve',
+        args: [bridgeAddress, amountWei],
+      }),
+      chainId: sourceChain.id,
+    });
+
+    const gasBridge = await estimateGas(config, {
+      to: bridgeAddress,
+      data: encodeFunctionData({
+        abi: L1_STANDARD_BRIDGE_ABI,
+        functionName: 'bridgeERC20',
+        args: [l1Address, l2Address, 0n, 210_000, '0x'],
+      }),
+      chainId: sourceChain.id,
+    });
+
+    const fees = await estimateFeesPerGas(config, {
+      chainId: sourceChain.id,
+    });
+
+    const feeValueWei = formatEther(fees.maxFeePerGas * (gasERC20Approve + gasBridge));
+
+    console.log(feeValueWei);
+
+    setFeeState({ value: feeValueWei, isPending: false });
+  };
+
+  useEffect(() => {
+    calculateFees();
+  }, [amountWei, sourceChain, selectedToken, bridgeAddress, connection, selectedChains]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -62,72 +150,44 @@ function TokenBridge() {
     setSelectedChains(data);
   }, []);
 
-  const submitBridge = async (amount: string, token: string) => {
-    const tokenData = BRIDGE_TOKENS_MAP.get(token);
-    const tokenChains = tokenData?.tokens;
-
-    if (!tokenChains) {
-      toast.error('Token chains not found');
+  const submitBridge = async (token: string) => {
+    const data = prepareBridgeTransactionData(token, selectedChains);
+    if (!data) {
       return;
     }
 
-    const sourceChain = CHAINS.find((c) => c.key === selectedChains.sourceChain);
-    const destinationChain = CHAINS.find((c) => c.key === selectedChains.destinationChain);
+    const { sourceChainId, l1Address, l2Address } = data;
 
-    if (!sourceChain || !destinationChain) {
-      toast.error('Chain not found');
-      return;
-    }
-
-    const isSourceChainL1 = isL1Chain(sourceChain.key);
-    const isDestinationChainL1 = isL1Chain(destinationChain.key);
-
-    if (isSourceChainL1 && isDestinationChainL1) {
-      toast.error('Cannot bridge between L1 chains');
-      return;
-    }
-
-    if (!isSourceChainL1 && !isDestinationChainL1) {
-      toast.error('Cannot bridge between L2 chains (temporary)');
-      return;
-    }
-
-    const sourceAddress = isSourceChainL1
-      ? tokenChains[sourceChain.key]?.address
-      : tokenChains[destinationChain.key]?.address;
-    const targetAddress = isSourceChainL1
-      ? tokenChains?.[destinationChain.key]?.address
-      : tokenChains?.[sourceChain.key]?.address;
-
-    if (!sourceAddress || !targetAddress) {
+    if (!l1Address || !l2Address) {
       toast.error('Token not found');
       return;
     }
 
-    const l1Address = isSourceChainL1 ? sourceAddress : targetAddress;
-    const l2Address = isSourceChainL1 ? targetAddress : sourceAddress;
-    const bridgeAddress = STANDARD_BRIDGE_ADDRESS?.[sourceChain.key]?.[destinationChain.key];
+    if (!isL1Chain(selectedChains.sourceChain) && !isL1Chain(selectedChains.destinationChain)) {
+      toast.error('Cannot bridge between L2 chains (temporary)');
+      return;
+    }
 
     if (!bridgeAddress) {
-      toast.error('Bridge address not found');
+      toast.error('Bridge contract not found for selected chains');
       return;
     }
 
     // switch the chain
-    if (currentChainId !== sourceChain.id) {
+    if (currentChainId !== sourceChainId) {
       await switchChain.mutateAsync({
-        chainId: sourceChain.id,
+        chainId: sourceChainId,
       });
     }
 
-    const amountWei = BigInt(amount) * 10n ** 18n;
+    const args = [l1Address, l2Address, amountWei, 210_000, '0x'];
 
     writeContractMutate(
       {
         address: bridgeAddress,
         abi: L1_STANDARD_BRIDGE_ABI,
         functionName: 'bridgeERC20',
-        args: [l1Address, l2Address, amountWei, 21_000, '0x'],
+        args,
       },
       {
         onSuccess: () => {
@@ -137,10 +197,60 @@ function TokenBridge() {
     );
   };
 
+  function prepareBridgeTransactionData(token: string, selectedChains: ChainsSelection) {
+    const tokenData = BRIDGE_TOKENS_MAP.get(token);
+    const tokenChains = tokenData?.tokens;
+
+    // if (!tokenChains) {
+    //   toast.error('Token chains not found');
+    //   return;
+    // }
+
+    const sourceChain = CHAINS.find((c) => c.key === selectedChains.sourceChain);
+    const destinationChain = CHAINS.find((c) => c.key === selectedChains.destinationChain);
+
+    if (!sourceChain || !destinationChain) {
+      return;
+    }
+
+    const isSourceChainL1 = isL1Chain(sourceChain.key);
+
+    // if (isSourceChainL1 && isDestinationChainL1) {
+    //   toast.error('Cannot bridge between L1 chains');
+    //   return;
+    // }
+
+    // if (!isSourceChainL1 && !isDestinationChainL1) {
+    //   toast.error('Cannot bridge between L2 chains (temporary)');
+    //   return;
+    // }
+
+    const sourceAddress = isSourceChainL1
+      ? tokenChains?.[sourceChain.key]?.address
+      : tokenChains?.[destinationChain.key]?.address;
+    const targetAddress = isSourceChainL1
+      ? tokenChains?.[destinationChain.key]?.address
+      : tokenChains?.[sourceChain.key]?.address;
+
+    // if (!sourceAddress || !targetAddress) {
+    //   toast.error('Token not found');
+    //   return;
+    // }
+
+    const l1Address = isSourceChainL1 ? sourceAddress : targetAddress;
+    const l2Address = isSourceChainL1 ? targetAddress : sourceAddress;
+
+    return {
+      sourceChainId: sourceChain.id,
+      l1Address,
+      l2Address,
+    };
+  }
+
   const _selectedTokenData = BRIDGE_TOKENS_MAP.get(selectedToken);
 
   return (
-    <Flex direction={'column'} gap={'6'}>
+    <Flex direction={'column'} gap={'4'}>
       <Flex direction={'column'}>
         <Heading as='h2'>Token Bridge</Heading>
         <Text>Choose source and destination chains and make a transfer</Text>
@@ -148,82 +258,103 @@ function TokenBridge() {
 
       <BridgeSelect onSelect={handleChainsSelect} />
 
-      <Flex
-        direction='column'
-        mx={'auto'}
-        maxWidth={{
-          initial: '310px',
-          xs: '400px',
-        }}
-        width={'100%'}
-      >
-        <TextField.Root
-          placeholder='1.25'
-          variant='soft'
-          size='3'
-          value={amount}
-          name='amount'
-          onChange={handleAmountChange}
-          onBlur={formatAmountOnBlur}
+      <Flex direction='column' align={'center'} gap={'2'}>
+        <Box
+          maxWidth={{
+            initial: '310px',
+            xs: '400px',
+          }}
+          width={'100%'}
         >
-          <TextField.Slot side='right'>
-            <Flex align={'center'} gap={'2'}>
-              {!!amount && (
-                <button
-                  type='button'
-                  onClick={() => setAmount('')}
-                  className={`rt-BaseButton rt-reset btn-reset`}
-                >
-                  <Delete size={18} />
-                </button>
-              )}
-              <Box minWidth={'60px'}>
-                <Button
-                  style={{
-                    width: '100%',
-                  }}
-                  size='2'
-                  variant='soft'
-                  onClick={() => setSelectTokenDialogOpen(true)}
-                >
-                  <Flex asChild align={'center'} gap={'1'}>
-                    <span>
-                      <img
-                        src={_selectedTokenData?.icon}
-                        alt={_selectedTokenData?.name}
-                        width={22}
-                        height={22}
-                        style={{
-                          borderRadius: '50%',
-                          backgroundColor: '#fff',
-                        }}
-                      />
-                      {_selectedTokenData?.symbol}
-                    </span>
-                  </Flex>
-                </Button>
-              </Box>
-            </Flex>
-          </TextField.Slot>
-        </TextField.Root>
-        <Text size='1' color='gray'>
-          =$120.45
-        </Text>
+          <TextField.Root
+            placeholder='1.25'
+            variant='soft'
+            size='3'
+            value={amount}
+            name='amount'
+            onChange={handleAmountChange}
+            onBlur={formatAmountOnBlur}
+          >
+            <TextField.Slot side='right'>
+              <Flex align={'center'} gap={'2'}>
+                {!!amount && (
+                  <Box asChild width={'24px'} height={'24px'} p={'0'}>
+                    <Button size={'1'} type='button' variant='soft' onClick={() => setAmount('')}>
+                      <Delete size={18} />
+                    </Button>
+                  </Box>
+                )}
+                <Box minWidth={'60px'}>
+                  <Button
+                    style={{
+                      width: '100%',
+                    }}
+                    size='2'
+                    variant='soft'
+                    onClick={() => setSelectTokenDialogOpen(true)}
+                  >
+                    <Flex asChild align={'center'} gap={'1'}>
+                      <span>
+                        <img
+                          src={_selectedTokenData?.icon}
+                          alt={_selectedTokenData?.name}
+                          width={22}
+                          height={22}
+                          style={{
+                            borderRadius: '50%',
+                            backgroundColor: '#fff',
+                          }}
+                        />
+                        {_selectedTokenData?.symbol}
+                      </span>
+                    </Flex>
+                  </Button>
+                </Box>
+              </Flex>
+            </TextField.Slot>
+          </TextField.Root>
+          <Text size='1' color='gray'>
+            =$120.45
+          </Text>
+        </Box>
 
-        <Flex direction={'column'} alignSelf={'start'} height={'20px'} mt={'1'}>
+        <Box maxWidth={'310px'} width={'100%'}>
+          <Box width={'100%'} asChild>
+            <Button
+              size={'3'}
+              onClick={() => submitBridge(selectedToken)}
+              disabled={writeContract.isPending}
+            >
+              {writeContract.isPending ? <Spinner /> : 'Send'}
+            </Button>
+          </Box>
+        </Box>
+
+        <Flex direction={'column'} gap={'1'} width={'100%'} maxWidth={'400px'}>
+          <Flex justify={'between'} align={'center'} gap={'1'}>
+            <Text size={'2'}>Estimated fee:</Text>
+
+            <Box>
+              {feeState.isPending ? (
+                <Spinner />
+              ) : !feeState.value ? (
+                <Text>--</Text>
+              ) : (
+                <Tooltip content={`≈ ${feeState.value.slice(0, 12)} ETH`}>
+                  <Text>≈ {Number(feeState.value).toFixed(4)} ETH</Text>
+                </Tooltip>
+              )}
+            </Box>
+          </Flex>
+        </Flex>
+
+        <Flex direction={'column'} height={'16px'} maxWidth={'310px'} width={'100%'}>
           {writeContract.error && (
-            <Text size='2' color='red'>
-              Error:{' '}
+            <Text size='2' color='red' trim='both'>
               {(writeContract.error as BaseError)?.shortMessage || writeContract.error.message}
             </Text>
           )}
         </Flex>
-
-        <Box alignSelf={'center'} pt={'1'}>
-          <Button size={'3'} onClick={() => submitBridge(amount, selectedToken)}>
-            Send
-          </Button>
-        </Box>
       </Flex>
 
       <Dialog.Root open={selectTokenDialogOpen} onOpenChange={setSelectTokenDialogOpen}>

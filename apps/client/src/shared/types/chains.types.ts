@@ -9,4 +9,5 @@ export type ChainType = L1ChainType | L2ChainType;
 export interface Chain {
   key: ChainType;
   name: string;
+  id: number;
 }
