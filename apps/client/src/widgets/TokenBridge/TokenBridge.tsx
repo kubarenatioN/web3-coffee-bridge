@@ -22,6 +22,7 @@ import {
 import { Delete } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useDebounce } from 'use-debounce';
 import { encodeFunctionData, formatEther } from 'viem';
 import { BaseError, useChainId, useConnection, useSwitchChain, useWriteContract } from 'wagmi';
 import { estimateFeesPerGas, estimateGas } from 'wagmi/actions';
@@ -50,6 +51,8 @@ function TokenBridge() {
     return amount ? BigInt(amount) * 10n ** 18n : 0n;
   }, [amount]);
 
+  const [amountWeiDebounced] = useDebounce(amountWei, 500);
+
   const { mutate: writeContractMutate } = writeContract;
 
   const currentChainId = useChainId();
@@ -65,62 +68,63 @@ function TokenBridge() {
     [amount, selectedChains, selectedToken],
   );
 
-  const calculateFees = async () => {
-    setFeeState({ ...feeState, value: '' });
-
-    if (!sourceChain || !bridgeAddress || !amountWei) {
-      return;
-    }
-
-    const txData = prepareBridgeTransactionData(selectedToken, selectedChains);
-    if (!txData) {
-      return;
-    }
-
-    const { l1Address, l2Address } = txData;
-
-    if (!l1Address || !l2Address) {
-      return;
-    }
-
-    setFeeState({ ...feeState, isPending: true });
-
-    const localAddress = isL1Chain(sourceChain.key) ? l1Address : l2Address;
-
-    const gasERC20Approve = await estimateGas(config, {
-      to: localAddress as `0x${string}`,
-      data: encodeFunctionData({
-        abi: IERC20_ABI,
-        functionName: 'approve',
-        args: [bridgeAddress, amountWei],
-      }),
-      chainId: sourceChain.id,
-    });
-
-    const gasBridge = await estimateGas(config, {
-      to: bridgeAddress,
-      data: encodeFunctionData({
-        abi: L1_STANDARD_BRIDGE_ABI,
-        functionName: 'bridgeERC20',
-        args: [l1Address, l2Address, 0n, 210_000, '0x'],
-      }),
-      chainId: sourceChain.id,
-    });
-
-    const fees = await estimateFeesPerGas(config, {
-      chainId: sourceChain.id,
-    });
-
-    const feeValueWei = formatEther(fees.maxFeePerGas * (gasERC20Approve + gasBridge));
-
-    console.log(feeValueWei);
-
-    setFeeState({ value: feeValueWei, isPending: false });
-  };
-
   useEffect(() => {
+    const calculateFees = async () => {
+      setFeeState({ isPending: false, value: '' });
+      const _amount = amountWeiDebounced;
+
+      if (!sourceChain || !bridgeAddress || !_amount) {
+        return;
+      }
+
+      const txData = prepareBridgeTransactionData(selectedToken, selectedChains);
+      if (!txData) {
+        return;
+      }
+
+      const { l1Address, l2Address } = txData;
+
+      if (!l1Address || !l2Address) {
+        return;
+      }
+
+      setFeeState({ ...feeState, isPending: true });
+
+      const localAddress = isL1Chain(sourceChain.key) ? l1Address : l2Address;
+
+      const gasERC20Approve = await estimateGas(config, {
+        to: localAddress as `0x${string}`,
+        data: encodeFunctionData({
+          abi: IERC20_ABI,
+          functionName: 'approve',
+          args: [bridgeAddress, amountWei],
+        }),
+        chainId: sourceChain.id,
+      });
+
+      const gasBridge = await estimateGas(config, {
+        to: bridgeAddress,
+        data: encodeFunctionData({
+          abi: L1_STANDARD_BRIDGE_ABI,
+          functionName: 'bridgeERC20',
+          args: [l1Address, l2Address, 0n, 210_000, '0x'],
+        }),
+        chainId: sourceChain.id,
+      });
+
+      const fees = await estimateFeesPerGas(config, {
+        chainId: sourceChain.id,
+      });
+
+      const feeValueWei = formatEther(fees.maxFeePerGas * (gasERC20Approve + gasBridge));
+
+      // console.log(feeValueWei);
+
+      setFeeState({ value: feeValueWei, isPending: false });
+    };
+
     calculateFees();
-  }, [amountWei, sourceChain, selectedToken, bridgeAddress, connection, selectedChains]);
+  }, [amountWeiDebounced, sourceChain, selectedToken, bridgeAddress, selectedChains]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -279,7 +283,13 @@ function TokenBridge() {
               <Flex align={'center'} gap={'2'}>
                 {!!amount && (
                   <Box asChild width={'24px'} height={'24px'} p={'0'}>
-                    <Button size={'1'} type='button' variant='soft' onClick={() => setAmount('')}>
+                    <Button
+                      size={'1'}
+                      type='button'
+                      variant='soft'
+                      onClick={() => setAmount('')}
+                      radius='full'
+                    >
                       <Delete size={18} />
                     </Button>
                   </Box>
@@ -334,17 +344,17 @@ function TokenBridge() {
           <Flex justify={'between'} align={'center'} gap={'1'}>
             <Text size={'2'}>Estimated fee:</Text>
 
-            <Box>
-              {feeState.isPending ? (
-                <Spinner />
-              ) : !feeState.value ? (
-                <Text>--</Text>
-              ) : (
-                <Tooltip content={`≈ ${feeState.value.slice(0, 12)} ETH`}>
-                  <Text>≈ {Number(feeState.value).toFixed(4)} ETH</Text>
-                </Tooltip>
-              )}
-            </Box>
+            {feeState.isPending ? (
+              <Spinner />
+            ) : !feeState.value ? (
+              <Tooltip content={'No estimate'}>
+                <Text size={'2'}>--</Text>
+              </Tooltip>
+            ) : (
+              <Tooltip content={`≈ ${feeState.value.slice(0, 12)} ETH`}>
+                <Text size={'2'}>≈ {Number(feeState.value).toFixed(4)} ETH</Text>
+              </Tooltip>
+            )}
           </Flex>
         </Flex>
 
