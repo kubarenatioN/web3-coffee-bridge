@@ -24,7 +24,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useDebounce } from 'use-debounce';
 import { encodeFunctionData, formatEther } from 'viem';
-import { BaseError, useChainId, useConnection, useSwitchChain, useWriteContract } from 'wagmi';
+import { BaseError, useChainId, useSwitchChain, useWriteContract } from 'wagmi';
 import { estimateFeesPerGas, estimateGas } from 'wagmi/actions';
 import styles from './TokenBridge.module.css';
 
@@ -34,7 +34,6 @@ function TokenBridge() {
   const [selectedChains, setSelectedChains] = useState<ChainsSelection>({} as ChainsSelection);
   const [amount, setAmount] = useState<string>('');
   const writeContract = useWriteContract();
-  const connection = useConnection();
 
   const [feeState, setFeeState] = useState<{ value: string; isPending: boolean }>({
     value: '',

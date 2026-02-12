@@ -1,12 +1,6 @@
 import { Button, Flex, Text } from '@radix-ui/themes';
-import {
-  injected,
-  useConnect,
-  useConnection,
-  useConnectionEffect,
-  useConnectors,
-  useDisconnect,
-} from 'wagmi';
+import { injected, useConnect, useConnection, useConnectors, useDisconnect } from 'wagmi';
+import { metaMask } from 'wagmi/connectors';
 
 function WalletConnectBtn() {
   const connection = useConnection();
@@ -14,17 +8,14 @@ function WalletConnectBtn() {
   const connect = useConnect();
   const connectors = useConnectors();
 
-  const injectedConnector = connectors.find((connector) => connector.id === injected.type);
+  const metaMaskConnector = connectors.find((c) => c.type === metaMask.type);
+  const injectedConnector = connectors.find((c) => c.type === injected.type);
 
-  useConnectionEffect({
-    onConnect(data) {
-      console.log('Connected!', data);
-    },
-  });
+  const connector = metaMaskConnector || injectedConnector;
 
   const handleConnect = () => {
-    if (injectedConnector) {
-      connect.mutate({ connector: injectedConnector });
+    if (connector) {
+      connect.mutate({ connector });
     }
   };
 
