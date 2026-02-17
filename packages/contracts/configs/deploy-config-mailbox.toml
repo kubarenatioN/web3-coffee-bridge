@@ -1,0 +1,17 @@
+[deploy_config]
+chains = ["sepolia/op","sepolia/worldchain","sepolia/base"]
+
+[contract]
+owner_address = "0xeca102a0E8755cAC155cE219B7051db53D012dF2"
+messenger = "0x4200000000000000000000000000000000000007"
+
+# Set deployed proxy address per chain to skip redeployment.
+# Leave as zero address if not yet deployed.
+[deployed.sepolia_op]
+address = "0x05A6E4D7c43B085EAF158a21B0A85997E978C958"
+
+[deployed.sepolia_worldchain]
+address = "0xB419429dB349EDAB49145E818f086590Ee91769C"
+
+[deployed.sepolia_base]
+address = "0xa554111f865B2D88c619bf75b325E91774d20A01"

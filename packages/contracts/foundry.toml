@@ -3,7 +3,7 @@ solc = "0.8.30"
 auto_detect_solc = false
 evm_version = "prague"
 src = "src"
-script = "scripts"
+script = "script"
 out = "out"
 libs = ["lib"]
 ffi = true
@@ -18,7 +18,10 @@ extra_output = ["storageLayout"]
 fs_permissions = [
   { access='read', path='./configs' },
   { access='read', path='./test' },
-  { access='write', path='./deployment.json' }
+  { access='read', path='./out' },
+  { access='write', path='./deployment.json' },
+  { access='write', path='./deployment-mailbox-l2.json' },
+  { access='write', path='./deployment-mailbox-l1.json' }
 ]
 
 [rpc_endpoints]
