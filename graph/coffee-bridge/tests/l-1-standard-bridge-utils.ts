@@ -1,5 +1,5 @@
-import { newMockEvent } from "matchstick-as"
-import { ethereum, Address, BigInt, Bytes } from "@graphprotocol/graph-ts"
+import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
+import { newMockEvent } from "matchstick-as";
 import {
   ERC20BridgeFinalized,
   ERC20BridgeInitiated,
@@ -10,7 +10,7 @@ import {
   ETHDepositInitiated,
   ETHWithdrawalFinalized,
   Initialized
-} from "../generated/L1StandardBridge/L1StandardBridge"
+} from "../generated/L1StandardBridgeOP/L1StandardBridge";
 
 export function createERC20BridgeFinalizedEvent(
   localToken: Address,
@@ -21,36 +21,36 @@ export function createERC20BridgeFinalizedEvent(
   extraData: Bytes
 ): ERC20BridgeFinalized {
   let erc20BridgeFinalizedEvent =
-    changetype<ERC20BridgeFinalized>(newMockEvent())
+    changetype<ERC20BridgeFinalized>(newMockEvent());
 
-  erc20BridgeFinalizedEvent.parameters = new Array()
+  erc20BridgeFinalizedEvent.parameters = new Array();
 
   erc20BridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam(
       "localToken",
       ethereum.Value.fromAddress(localToken)
     )
-  )
+  );
   erc20BridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam(
       "remoteToken",
       ethereum.Value.fromAddress(remoteToken)
     )
-  )
+  );
   erc20BridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam("from", ethereum.Value.fromAddress(from))
-  )
+  );
   erc20BridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam("to", ethereum.Value.fromAddress(to))
-  )
+  );
   erc20BridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+  );
   erc20BridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam("extraData", ethereum.Value.fromBytes(extraData))
-  )
+  );
 
-  return erc20BridgeFinalizedEvent
+  return erc20BridgeFinalizedEvent;
 }
 
 export function createERC20BridgeInitiatedEvent(
@@ -62,36 +62,36 @@ export function createERC20BridgeInitiatedEvent(
   extraData: Bytes
 ): ERC20BridgeInitiated {
   let erc20BridgeInitiatedEvent =
-    changetype<ERC20BridgeInitiated>(newMockEvent())
+    changetype<ERC20BridgeInitiated>(newMockEvent());
 
-  erc20BridgeInitiatedEvent.parameters = new Array()
+  erc20BridgeInitiatedEvent.parameters = new Array();
 
   erc20BridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam(
       "localToken",
       ethereum.Value.fromAddress(localToken)
     )
-  )
+  );
   erc20BridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam(
       "remoteToken",
       ethereum.Value.fromAddress(remoteToken)
     )
-  )
+  );
   erc20BridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam("from", ethereum.Value.fromAddress(from))
-  )
+  );
   erc20BridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam("to", ethereum.Value.fromAddress(to))
-  )
+  );
   erc20BridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+  );
   erc20BridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam("extraData", ethereum.Value.fromBytes(extraData))
-  )
+  );
 
-  return erc20BridgeInitiatedEvent
+  return erc20BridgeInitiatedEvent;
 }
 
 export function createERC20DepositInitiatedEvent(
@@ -103,30 +103,30 @@ export function createERC20DepositInitiatedEvent(
   extraData: Bytes
 ): ERC20DepositInitiated {
   let erc20DepositInitiatedEvent =
-    changetype<ERC20DepositInitiated>(newMockEvent())
+    changetype<ERC20DepositInitiated>(newMockEvent());
 
-  erc20DepositInitiatedEvent.parameters = new Array()
+  erc20DepositInitiatedEvent.parameters = new Array();
 
   erc20DepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("l1Token", ethereum.Value.fromAddress(l1Token))
-  )
+  );
   erc20DepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("l2Token", ethereum.Value.fromAddress(l2Token))
-  )
+  );
   erc20DepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("from", ethereum.Value.fromAddress(from))
-  )
+  );
   erc20DepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("to", ethereum.Value.fromAddress(to))
-  )
+  );
   erc20DepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+  );
   erc20DepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("extraData", ethereum.Value.fromBytes(extraData))
-  )
+  );
 
-  return erc20DepositInitiatedEvent
+  return erc20DepositInitiatedEvent;
 }
 
 export function createERC20WithdrawalFinalizedEvent(
@@ -138,30 +138,30 @@ export function createERC20WithdrawalFinalizedEvent(
   extraData: Bytes
 ): ERC20WithdrawalFinalized {
   let erc20WithdrawalFinalizedEvent =
-    changetype<ERC20WithdrawalFinalized>(newMockEvent())
+    changetype<ERC20WithdrawalFinalized>(newMockEvent());
 
-  erc20WithdrawalFinalizedEvent.parameters = new Array()
+  erc20WithdrawalFinalizedEvent.parameters = new Array();
 
   erc20WithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("l1Token", ethereum.Value.fromAddress(l1Token))
-  )
+  );
   erc20WithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("l2Token", ethereum.Value.fromAddress(l2Token))
-  )
+  );
   erc20WithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("from", ethereum.Value.fromAddress(from))
-  )
+  );
   erc20WithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("to", ethereum.Value.fromAddress(to))
-  )
+  );
   erc20WithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+  );
   erc20WithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("extraData", ethereum.Value.fromBytes(extraData))
-  )
+  );
 
-  return erc20WithdrawalFinalizedEvent
+  return erc20WithdrawalFinalizedEvent;
 }
 
 export function createETHBridgeFinalizedEvent(
@@ -170,24 +170,24 @@ export function createETHBridgeFinalizedEvent(
   amount: BigInt,
   extraData: Bytes
 ): ETHBridgeFinalized {
-  let ethBridgeFinalizedEvent = changetype<ETHBridgeFinalized>(newMockEvent())
+  let ethBridgeFinalizedEvent = changetype<ETHBridgeFinalized>(newMockEvent());
 
-  ethBridgeFinalizedEvent.parameters = new Array()
+  ethBridgeFinalizedEvent.parameters = new Array();
 
   ethBridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam("from", ethereum.Value.fromAddress(from))
-  )
+  );
   ethBridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam("to", ethereum.Value.fromAddress(to))
-  )
+  );
   ethBridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+  );
   ethBridgeFinalizedEvent.parameters.push(
     new ethereum.EventParam("extraData", ethereum.Value.fromBytes(extraData))
-  )
+  );
 
-  return ethBridgeFinalizedEvent
+  return ethBridgeFinalizedEvent;
 }
 
 export function createETHBridgeInitiatedEvent(
@@ -196,24 +196,24 @@ export function createETHBridgeInitiatedEvent(
   amount: BigInt,
   extraData: Bytes
 ): ETHBridgeInitiated {
-  let ethBridgeInitiatedEvent = changetype<ETHBridgeInitiated>(newMockEvent())
+  let ethBridgeInitiatedEvent = changetype<ETHBridgeInitiated>(newMockEvent());
 
-  ethBridgeInitiatedEvent.parameters = new Array()
+  ethBridgeInitiatedEvent.parameters = new Array();
 
   ethBridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam("from", ethereum.Value.fromAddress(from))
-  )
+  );
   ethBridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam("to", ethereum.Value.fromAddress(to))
-  )
+  );
   ethBridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+  );
   ethBridgeInitiatedEvent.parameters.push(
     new ethereum.EventParam("extraData", ethereum.Value.fromBytes(extraData))
-  )
+  );
 
-  return ethBridgeInitiatedEvent
+  return ethBridgeInitiatedEvent;
 }
 
 export function createETHDepositInitiatedEvent(
@@ -222,24 +222,25 @@ export function createETHDepositInitiatedEvent(
   amount: BigInt,
   extraData: Bytes
 ): ETHDepositInitiated {
-  let ethDepositInitiatedEvent = changetype<ETHDepositInitiated>(newMockEvent())
+  let ethDepositInitiatedEvent =
+    changetype<ETHDepositInitiated>(newMockEvent());
 
-  ethDepositInitiatedEvent.parameters = new Array()
+  ethDepositInitiatedEvent.parameters = new Array();
 
   ethDepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("from", ethereum.Value.fromAddress(from))
-  )
+  );
   ethDepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("to", ethereum.Value.fromAddress(to))
-  )
+  );
   ethDepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+  );
   ethDepositInitiatedEvent.parameters.push(
     new ethereum.EventParam("extraData", ethereum.Value.fromBytes(extraData))
-  )
+  );
 
-  return ethDepositInitiatedEvent
+  return ethDepositInitiatedEvent;
 }
 
 export function createETHWithdrawalFinalizedEvent(
@@ -249,37 +250,37 @@ export function createETHWithdrawalFinalizedEvent(
   extraData: Bytes
 ): ETHWithdrawalFinalized {
   let ethWithdrawalFinalizedEvent =
-    changetype<ETHWithdrawalFinalized>(newMockEvent())
+    changetype<ETHWithdrawalFinalized>(newMockEvent());
 
-  ethWithdrawalFinalizedEvent.parameters = new Array()
+  ethWithdrawalFinalizedEvent.parameters = new Array();
 
   ethWithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("from", ethereum.Value.fromAddress(from))
-  )
+  );
   ethWithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("to", ethereum.Value.fromAddress(to))
-  )
+  );
   ethWithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount))
-  )
+  );
   ethWithdrawalFinalizedEvent.parameters.push(
     new ethereum.EventParam("extraData", ethereum.Value.fromBytes(extraData))
-  )
+  );
 
-  return ethWithdrawalFinalizedEvent
+  return ethWithdrawalFinalizedEvent;
 }
 
 export function createInitializedEvent(version: i32): Initialized {
-  let initializedEvent = changetype<Initialized>(newMockEvent())
+  let initializedEvent = changetype<Initialized>(newMockEvent());
 
-  initializedEvent.parameters = new Array()
+  initializedEvent.parameters = new Array();
 
   initializedEvent.parameters.push(
     new ethereum.EventParam(
       "version",
       ethereum.Value.fromUnsignedBigInt(BigInt.fromI32(version))
     )
-  )
+  );
 
-  return initializedEvent
+  return initializedEvent;
 }
