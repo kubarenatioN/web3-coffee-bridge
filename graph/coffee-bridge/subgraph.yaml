@@ -1,0 +1,50 @@
+specVersion: 1.3.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: L1StandardBridge
+    network: sepolia
+    source:
+      address: "0xFBb0621E0B23b5478B630BD55a5f21f67730B0F1"
+      abi: L1StandardBridge
+      startBlock: 10114420
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - ERC20BridgeFinalized
+        - ERC20BridgeInitiated
+        - ERC20DepositInitiated
+        - ERC20WithdrawalFinalized
+        - ETHBridgeFinalized
+        - ETHBridgeInitiated
+        - ETHDepositInitiated
+        - ETHWithdrawalFinalized
+        - Initialized
+      abis:
+        - name: L1StandardBridge
+          file: ./abis/L1StandardBridge.json
+      eventHandlers:
+        - event: ERC20BridgeFinalized(indexed address,indexed address,indexed address,address,uint256,bytes)
+          handler: handleERC20BridgeFinalized
+        - event: ERC20BridgeInitiated(indexed address,indexed address,indexed address,address,uint256,bytes)
+          handler: handleERC20BridgeInitiated
+        - event: ERC20DepositInitiated(indexed address,indexed address,indexed address,address,uint256,bytes)
+          handler: handleERC20DepositInitiated
+        - event: ERC20WithdrawalFinalized(indexed address,indexed address,indexed address,address,uint256,bytes)
+          handler: handleERC20WithdrawalFinalized
+        - event: ETHBridgeFinalized(indexed address,indexed address,uint256,bytes)
+          handler: handleETHBridgeFinalized
+        - event: ETHBridgeInitiated(indexed address,indexed address,uint256,bytes)
+          handler: handleETHBridgeInitiated
+        - event: ETHDepositInitiated(indexed address,indexed address,uint256,bytes)
+          handler: handleETHDepositInitiated
+        - event: ETHWithdrawalFinalized(indexed address,indexed address,uint256,bytes)
+          handler: handleETHWithdrawalFinalized
+        - event: Initialized(uint8)
+          handler: handleInitialized
+      file: ./src/l-1-standard-bridge.ts
