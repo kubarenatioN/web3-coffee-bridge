@@ -8,14 +8,14 @@ dataSources:
     name: L1StandardBridgeOP
     network: sepolia
     source:
-      address: '0xFBb0621E0B23b5478B630BD55a5f21f67730B0F1'
+      address: "0xFBb0621E0B23b5478B630BD55a5f21f67730B0F1"
       abi: L1StandardBridge
       startBlock: 10114420
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
       language: wasm/assemblyscript
-      entities:
+      entities: &L1BridgeCommonEntities
         - ERC20BridgeFinalized
         - ERC20BridgeInitiated
         - ERC20DepositInitiated
@@ -25,29 +25,30 @@ dataSources:
         - ETHDepositInitiated
         - ETHWithdrawalFinalized
         # - Initialized
-      abis:
+      abis: &L1BridgeCommonAbis
         - name: L1StandardBridge
           file: ./abis/L1StandardBridge.json
-      eventHandlers:
+      eventHandlers: &L1BridgeCommonEventHandlers
         - event: ERC20BridgeFinalized(indexed address,indexed address,indexed
             address,address,uint256,bytes)
           handler: handleERC20BridgeFinalized
-          topic1: ['0xaB95e0280eA9c3dCF906eecD4A40Cba079475307']
+          topic1: ["0xaB95e0280eA9c3dCF906eecD4A40Cba079475307"]
 
         - event: ERC20BridgeInitiated(indexed address,indexed address,indexed
             address,address,uint256,bytes)
           handler: handleERC20BridgeInitiated
-          topic1: ['0xaB95e0280eA9c3dCF906eecD4A40Cba079475307']
+          topic1: ["0xaB95e0280eA9c3dCF906eecD4A40Cba079475307"]
 
         - event: ERC20DepositInitiated(indexed address,indexed address,indexed
             address,address,uint256,bytes)
           handler: handleERC20DepositInitiated
-          topic1: ['0xaB95e0280eA9c3dCF906eecD4A40Cba079475307']
+          topic1: ["0xaB95e0280eA9c3dCF906eecD4A40Cba079475307"]
 
-        - event: ERC20WithdrawalFinalized(indexed address,indexed address,indexed
+        - event:
+            ERC20WithdrawalFinalized(indexed address,indexed address,indexed
             address,address,uint256,bytes)
           handler: handleERC20WithdrawalFinalized
-          topic1: ['0xaB95e0280eA9c3dCF906eecD4A40Cba079475307']
+          topic1: ["0xaB95e0280eA9c3dCF906eecD4A40Cba079475307"]
 
         # - event: ETHBridgeFinalized(indexed address,indexed address,uint256,bytes)
         #   handler: handleETHBridgeFinalized
@@ -60,4 +61,36 @@ dataSources:
 
         # - event: ETHWithdrawalFinalized(indexed address,indexed address,uint256,bytes)
         #   handler: handleETHWithdrawalFinalized
-      file: ./src/l-1-standard-bridge.ts
+      file: ./src/L1StandardBridge.mapping.ts
+
+  - kind: ethereum
+    name: L1StandardBridgeBase
+    network: sepolia
+    source:
+      address: "0xfd0Bf71F60660E2f608ed56e1659C450eB113120"
+      abi: L1StandardBridge
+      startBlock: 10114420
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities: *L1BridgeCommonEntities
+      abis: *L1BridgeCommonAbis
+      eventHandlers: *L1BridgeCommonEventHandlers
+      file: ./src/L1StandardBridge.mapping.ts
+
+  - kind: ethereum
+    name: L1StandardBridgeWorldChain
+    network: sepolia
+    source:
+      address: "0xd7DF54b3989855eb66497301a4aAEc33Dbb3F8DE"
+      abi: L1StandardBridge
+      startBlock: 10114420
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities: *L1BridgeCommonEntities
+      abis: *L1BridgeCommonAbis
+      eventHandlers: *L1BridgeCommonEventHandlers
+      file: ./src/L1StandardBridge.mapping.ts
