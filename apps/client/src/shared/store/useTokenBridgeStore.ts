@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { ChainType } from '../types/chains.types';
 
-interface TokenBridgeStore {
+export interface TokenBridgeStore {
   sourceChain: ChainType;
   destinationChain: ChainType;
   token: string;

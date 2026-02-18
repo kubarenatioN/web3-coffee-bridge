@@ -1,9 +1,9 @@
 import { IERC20_ABI } from '@/contracts/abi/IERC20.abi';
 import { L1_STANDARD_BRIDGE_ABI } from '@/contracts/abi/L1StandardBridge.abi';
-import { STANDARD_BRIDGE_ADDRESS } from '@/contracts/config';
 import { CHAINS } from '@/shared/config/chains';
 import { BRIDGE_TOKENS_MAP } from '@/shared/config/tokens';
 import { isL1Chain } from '@/shared/helpers/chain.helper';
+import { bridgeAddressSelector } from '@/shared/store/tokenBridgeStoreSelectors';
 import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
 import { config } from '@/wagmi.config';
 import { useEffect } from 'react';
@@ -16,16 +16,14 @@ export function useTokenBridgeFee() {
   const destinationChain = useTokenBridgeStore((s) => s.destinationChain);
   const selectedToken = useTokenBridgeStore((s) => s.token);
   const tokenAmount = useTokenBridgeStore((s) => s.tokenAmount);
+
   const setFeeState = useTokenBridgeStore((s) => s.setFeeState);
+
+  const bridgeAddress = useTokenBridgeStore(bridgeAddressSelector);
+  const sourceChainFull = CHAINS.find((c) => c.key === sourceChain);
 
   const amountWei = tokenAmount ? BigInt(tokenAmount) * 10n ** 18n : 0n;
   const [amountWeiDebounced] = useDebounce(amountWei, 500);
-
-  const sourceChainFull = CHAINS.find((c) => c.key === sourceChain);
-
-  const bridgeAddress = sourceChainFull
-    ? STANDARD_BRIDGE_ADDRESS?.[sourceChainFull?.key]?.[destinationChain]
-    : undefined;
 
   useEffect(() => {
     let stale = false;
@@ -39,7 +37,7 @@ export function useTokenBridgeFee() {
         return;
       }
 
-      const sourceChainId = sourceChainFull.id;
+      const sourceChainId = sourceChainFull?.id;
 
       const tokenAddresses = _getTokenAddresses();
 

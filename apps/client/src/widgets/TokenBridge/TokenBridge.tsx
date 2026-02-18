@@ -1,11 +1,11 @@
 import { L1_STANDARD_BRIDGE_ABI } from '@/contracts/abi/L1StandardBridge.abi';
-import { STANDARD_BRIDGE_ADDRESS } from '@/contracts/config';
 import { BridgeSelect, type ChainsSelection } from '@/features/BridgeSelect';
 import TokenBridgeFee from '@/features/TokenBridgeFee/TokenBridgeFee';
 import TokenInput from '@/features/TokenInput/TokenInput';
 import { CHAINS } from '@/shared/config/chains';
 import { BRIDGE_TOKENS_MAP } from '@/shared/config/tokens';
 import { isL1Chain } from '@/shared/helpers/chain.helper';
+import { bridgeAddressSelector } from '@/shared/store/tokenBridgeStoreSelectors';
 import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
 import { Box, Button, Flex, Heading, Spinner, Text } from '@radix-ui/themes';
 import { useEffect } from 'react';
@@ -22,13 +22,9 @@ function TokenBridge() {
 
   const writeContract = useWriteContract();
 
-  // TODO: move bridgeAddress to store
-  const sourceChainFull = CHAINS.find((c) => c.key === sourceChain);
-  const bridgeAddress = sourceChainFull
-    ? STANDARD_BRIDGE_ADDRESS?.[sourceChainFull?.key]?.[destinationChain]
-    : undefined;
+  const bridgeAddress = useTokenBridgeStore(bridgeAddressSelector);
 
-  console.log(sourceChain, destinationChain);
+  console.log(bridgeAddress);
 
   const { mutate: writeContractMutate } = writeContract;
 
