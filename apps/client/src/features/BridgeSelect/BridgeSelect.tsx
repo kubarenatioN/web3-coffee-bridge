@@ -10,7 +10,9 @@ const chainsMap = new Map(CHAINS.map((chain) => [chain.key, chain]));
 
 function BridgeSelect() {
   const sourceChain = useTokenBridgeStore((state) => state.sourceChain);
-  const destinationChain = useTokenBridgeStore((state) => state.destinationChain);
+  const destinationChain = useTokenBridgeStore(
+    (state) => state.destinationChain,
+  );
   const setChain = useTokenBridgeStore((state) => state.setChain);
 
   return (

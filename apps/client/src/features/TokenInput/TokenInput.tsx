@@ -1,7 +1,15 @@
 import { BRIDGE_TOKENS, BRIDGE_TOKENS_MAP } from '@/shared/config/tokens';
 import { InputHelpers } from '@/shared/helpers/input.helpers';
 import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
-import { Box, Button, Dialog, Flex, Inset, Text, TextField } from '@radix-ui/themes';
+import {
+  Box,
+  Button,
+  Dialog,
+  Flex,
+  Inset,
+  Text,
+  TextField,
+} from '@radix-ui/themes';
 import { Delete } from 'lucide-react';
 import { memo, useState } from 'react';
 import styles from './TokenInput.module.css';
@@ -22,7 +30,9 @@ function TokenInput() {
     }
   };
 
-  const formatAmountOnBlur = (e: React.FocusEvent<HTMLInputElement, Element>) => {
+  const formatAmountOnBlur = (
+    e: React.FocusEvent<HTMLInputElement, Element>,
+  ) => {
     const value = e.target.value;
 
     if (!value) {
@@ -38,8 +48,6 @@ function TokenInput() {
   };
 
   const _selectedTokenData = BRIDGE_TOKENS_MAP.get(selectedToken);
-
-  console.log('amount:', amount);
 
   return (
     <Box
@@ -107,10 +115,15 @@ function TokenInput() {
         =$120.45
       </Text>
 
-      <Dialog.Root open={selectTokenDialogOpen} onOpenChange={setSelectTokenDialogOpen}>
+      <Dialog.Root
+        open={selectTokenDialogOpen}
+        onOpenChange={setSelectTokenDialogOpen}
+      >
         <Dialog.Content maxWidth={'480px'}>
           <Dialog.Title mb={'2'}>Select a token</Dialog.Title>
-          <Dialog.Description>Select a token you want to bridge</Dialog.Description>
+          <Dialog.Description>
+            Select a token you want to bridge
+          </Dialog.Description>
 
           <Inset mt={'4'} side={'x'}>
             <Flex direction={'column'} px={'1'}>
