@@ -9,6 +9,7 @@ type ERC20BridgeFinalized @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  bridgeAddress: Bytes! # address
 }
 
 type ERC20BridgeInitiated @entity(immutable: true) {
@@ -22,6 +23,7 @@ type ERC20BridgeInitiated @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  bridgeAddress: Bytes! # address
 }
 
 type ERC20DepositInitiated @entity(immutable: true) {
@@ -35,6 +37,7 @@ type ERC20DepositInitiated @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  bridgeAddress: Bytes! # address
 }
 
 type ERC20WithdrawalFinalized @entity(immutable: true) {
@@ -48,6 +51,7 @@ type ERC20WithdrawalFinalized @entity(immutable: true) {
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
+  bridgeAddress: Bytes! # address
 }
 
 type ETHBridgeFinalized @entity(immutable: true) {
