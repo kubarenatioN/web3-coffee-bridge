@@ -1,32 +1,16 @@
 import { CHAINS } from '@/shared/config/chains';
+import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
 import type { ChainType } from '@/shared/types/chains.types';
 import { Box, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
 import { ArrowRightLeft } from 'lucide-react';
-import { memo, useEffect, useReducer } from 'react';
 import styles from './BridgeSelect.module.css';
-import type { ChainsReducerState, ChainsSelection } from './models';
-import { chainsReducer } from './reducers';
-
-interface BridgeSelectProps {
-  onSelect: (data: ChainsSelection) => void;
-}
 
 const chainsMap = new Map(CHAINS.map((chain) => [chain.key, chain]));
 
-function BridgeSelect({ onSelect }: BridgeSelectProps) {
-  const [chainsState, dispatchChain] = useReducer(chainsReducer, {
-    sourceChain: 'ethereum-sepolia',
-    destinationChain: 'op-sepolia',
-  } as ChainsReducerState);
-
-  useEffect(() => {
-    onSelect({
-      sourceChain: chainsState.sourceChain,
-      destinationChain: chainsState.destinationChain,
-    });
-  }, [onSelect, chainsState]);
-
-  const { sourceChain, destinationChain } = chainsState;
+function BridgeSelect() {
+  const sourceChain = useTokenBridgeStore((state) => state.sourceChain);
+  const destinationChain = useTokenBridgeStore((state) => state.destinationChain);
+  const setChain = useTokenBridgeStore((state) => state.setChain);
 
   return (
     <Grid
@@ -48,7 +32,7 @@ function BridgeSelect({ onSelect }: BridgeSelectProps) {
         <Select.Root
           value={sourceChain}
           onValueChange={(val: ChainType) => {
-            dispatchChain({ type: 'set_source_chain', chain: val });
+            setChain({ type: 'source', value: val });
           }}
         >
           <Select.Trigger className={styles['select-trigger']}>
@@ -87,7 +71,7 @@ function BridgeSelect({ onSelect }: BridgeSelectProps) {
         <Select.Root
           value={destinationChain}
           onValueChange={(val: ChainType) => {
-            dispatchChain({ type: 'set_destination_chain', chain: val });
+            setChain({ type: 'dest', value: val });
           }}
         >
           <Select.Trigger className={styles['select-trigger']}>
@@ -108,4 +92,4 @@ function BridgeSelect({ onSelect }: BridgeSelectProps) {
   );
 }
 
-export default memo(BridgeSelect);
+export default BridgeSelect;

@@ -6,6 +6,7 @@ import { CHAINS } from '@/shared/config/chains';
 import { BRIDGE_TOKENS, BRIDGE_TOKENS_MAP } from '@/shared/config/tokens';
 import { isL1Chain } from '@/shared/helpers/chain.helper';
 import { InputHelpers } from '@/shared/helpers/input.helpers';
+import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
 import { config } from '@/wagmi.config';
 import {
   Box,
@@ -20,7 +21,7 @@ import {
   Tooltip,
 } from '@radix-ui/themes';
 import { Delete } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useDebounce } from 'use-debounce';
 import { encodeFunctionData, formatEther } from 'viem';
@@ -31,7 +32,12 @@ import styles from './TokenBridge.module.css';
 function TokenBridge() {
   const [selectTokenDialogOpen, setSelectTokenDialogOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState<string>(BRIDGE_TOKENS[0].name);
-  const [selectedChains, setSelectedChains] = useState<ChainsSelection>({} as ChainsSelection);
+
+  const sourceChain = useTokenBridgeStore((state) => state.sourceChain);
+  const destinationChain = useTokenBridgeStore((state) => state.destinationChain);
+
+  console.log(sourceChain, destinationChain);
+
   const [amount, setAmount] = useState<string>('');
   const writeContract = useWriteContract();
 
@@ -40,10 +46,10 @@ function TokenBridge() {
     isPending: false,
   });
 
-  const sourceChain = CHAINS.find((c) => c.key === selectedChains.sourceChain);
+  const sourceChainFull = CHAINS.find((c) => c.key === sourceChain);
 
-  const bridgeAddress = sourceChain
-    ? STANDARD_BRIDGE_ADDRESS?.[sourceChain.key]?.[selectedChains.destinationChain]
+  const bridgeAddress = sourceChainFull
+    ? STANDARD_BRIDGE_ADDRESS?.[sourceChainFull?.key]?.[destinationChain]
     : undefined;
 
   const amountWei = useMemo(() => {
@@ -64,7 +70,7 @@ function TokenBridge() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [amount, selectedChains, selectedToken],
+    [amount, sourceChain, destinationChain, selectedToken],
   );
 
   useEffect(() => {
@@ -72,11 +78,11 @@ function TokenBridge() {
       setFeeState({ isPending: false, value: '' });
       const _amount = amountWeiDebounced;
 
-      if (!sourceChain || !bridgeAddress || !_amount) {
+      if (!sourceChainFull || !bridgeAddress || !_amount) {
         return;
       }
 
-      const txData = prepareBridgeTransactionData(selectedToken, selectedChains);
+      const txData = prepareBridgeTransactionData(selectedToken, { sourceChain, destinationChain });
       if (!txData) {
         return;
       }
@@ -89,7 +95,8 @@ function TokenBridge() {
 
       setFeeState({ ...feeState, isPending: true });
 
-      const localAddress = isL1Chain(sourceChain.key) ? l1Address : l2Address;
+      const localAddress = isL1Chain(sourceChainFull.key) ? l1Address : l2Address;
+      const sourceChainId = sourceChainFull.id;
 
       const gasERC20Approve = await estimateGas(config, {
         to: localAddress as `0x${string}`,
@@ -98,7 +105,7 @@ function TokenBridge() {
           functionName: 'approve',
           args: [bridgeAddress, amountWei],
         }),
-        chainId: sourceChain.id,
+        chainId: sourceChainId,
       });
 
       const gasBridge = await estimateGas(config, {
@@ -108,11 +115,11 @@ function TokenBridge() {
           functionName: 'bridgeERC20',
           args: [l1Address, l2Address, 0n, 210_000, '0x'],
         }),
-        chainId: sourceChain.id,
+        chainId: sourceChainId,
       });
 
       const fees = await estimateFeesPerGas(config, {
-        chainId: sourceChain.id,
+        chainId: sourceChainId,
       });
 
       const feeValueWei = formatEther(fees.maxFeePerGas * (gasERC20Approve + gasBridge));
@@ -123,7 +130,7 @@ function TokenBridge() {
     };
 
     calculateFees();
-  }, [amountWeiDebounced, sourceChain, selectedToken, bridgeAddress, selectedChains]);
+  }, [amountWeiDebounced, sourceChain, selectedToken, bridgeAddress]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -149,12 +156,8 @@ function TokenBridge() {
     }
   };
 
-  const handleChainsSelect = useCallback((data: ChainsSelection) => {
-    setSelectedChains(data);
-  }, []);
-
   const submitBridge = async (token: string) => {
-    const data = prepareBridgeTransactionData(token, selectedChains);
+    const data = prepareBridgeTransactionData(token, { sourceChain, destinationChain });
     if (!data) {
       return;
     }
@@ -166,7 +169,7 @@ function TokenBridge() {
       return;
     }
 
-    if (!isL1Chain(selectedChains.sourceChain) && !isL1Chain(selectedChains.destinationChain)) {
+    if (!isL1Chain(sourceChain) && !isL1Chain(destinationChain)) {
       toast.error('Cannot bridge between L2 chains (temporary)');
       return;
     }
@@ -259,7 +262,7 @@ function TokenBridge() {
         <Text>Choose source and destination chains and make a transfer</Text>
       </Flex>
 
-      <BridgeSelect onSelect={handleChainsSelect} />
+      <BridgeSelect />
 
       <Flex direction='column' align={'center'} gap={'2'}>
         <Box
