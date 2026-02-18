@@ -1,47 +1,34 @@
-import { IERC20_ABI } from '@/contracts/abi/IERC20.abi';
 import { L1_STANDARD_BRIDGE_ABI } from '@/contracts/abi/L1StandardBridge.abi';
 import { STANDARD_BRIDGE_ADDRESS } from '@/contracts/config';
 import { BridgeSelect, type ChainsSelection } from '@/features/BridgeSelect';
+import TokenBridgeFee from '@/features/TokenBridgeFee/TokenBridgeFee';
 import TokenInput from '@/features/TokenInput/TokenInput';
 import { CHAINS } from '@/shared/config/chains';
 import { BRIDGE_TOKENS_MAP } from '@/shared/config/tokens';
 import { isL1Chain } from '@/shared/helpers/chain.helper';
 import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
-import { config } from '@/wagmi.config';
-import { Box, Button, Flex, Heading, Spinner, Text, Tooltip } from '@radix-ui/themes';
-import { useEffect, useMemo, useState } from 'react';
+import { Box, Button, Flex, Heading, Spinner, Text } from '@radix-ui/themes';
+import { useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { useDebounce } from 'use-debounce';
-import { encodeFunctionData, formatEther } from 'viem';
+import { parseEther } from 'viem';
 import { BaseError, useChainId, useSwitchChain, useWriteContract } from 'wagmi';
-import { estimateFeesPerGas, estimateGas } from 'wagmi/actions';
 
 function TokenBridge() {
   const sourceChain = useTokenBridgeStore((state) => state.sourceChain);
-  const destinationChain = useTokenBridgeStore((state) => state.destinationChain);
+  const destinationChain = useTokenBridgeStore(
+    (state) => state.destinationChain,
+  );
   const selectedToken = useTokenBridgeStore((state) => state.token);
-  const amount = useTokenBridgeStore((state) => state.tokenAmount);
 
   const writeContract = useWriteContract();
 
-  const [feeState, setFeeState] = useState<{ value: string; isPending: boolean }>({
-    value: '',
-    isPending: false,
-  });
-
-  // console.log(sourceChain, destinationChain, amount);
-
+  // TODO: move bridgeAddress to store
   const sourceChainFull = CHAINS.find((c) => c.key === sourceChain);
-
   const bridgeAddress = sourceChainFull
     ? STANDARD_BRIDGE_ADDRESS?.[sourceChainFull?.key]?.[destinationChain]
     : undefined;
 
-  const amountWei = useMemo(() => {
-    return amount ? BigInt(amount) * 10n ** 18n : 0n;
-  }, [amount]);
-
-  const [amountWeiDebounced] = useDebounce(amountWei, 500);
+  console.log(sourceChain, destinationChain);
 
   const { mutate: writeContractMutate } = writeContract;
 
@@ -55,70 +42,14 @@ function TokenBridge() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [amount, sourceChain, destinationChain, selectedToken],
+    [sourceChain, destinationChain, selectedToken],
   );
 
-  useEffect(() => {
-    const calculateFees = async () => {
-      setFeeState({ isPending: false, value: '' });
-      const _amount = amountWeiDebounced;
-
-      if (!sourceChainFull || !bridgeAddress || !_amount) {
-        return;
-      }
-
-      const txData = prepareBridgeTransactionData(selectedToken, { sourceChain, destinationChain });
-      if (!txData) {
-        return;
-      }
-
-      const { l1Address, l2Address } = txData;
-
-      if (!l1Address || !l2Address) {
-        return;
-      }
-
-      setFeeState({ ...feeState, isPending: true });
-
-      const localAddress = isL1Chain(sourceChainFull.key) ? l1Address : l2Address;
-      const sourceChainId = sourceChainFull.id;
-
-      const gasERC20Approve = await estimateGas(config, {
-        to: localAddress as `0x${string}`,
-        data: encodeFunctionData({
-          abi: IERC20_ABI,
-          functionName: 'approve',
-          args: [bridgeAddress, amountWei],
-        }),
-        chainId: sourceChainId,
-      });
-
-      const gasBridge = await estimateGas(config, {
-        to: bridgeAddress,
-        data: encodeFunctionData({
-          abi: L1_STANDARD_BRIDGE_ABI,
-          functionName: 'bridgeERC20',
-          args: [l1Address, l2Address, 0n, 210_000, '0x'],
-        }),
-        chainId: sourceChainId,
-      });
-
-      const fees = await estimateFeesPerGas(config, {
-        chainId: sourceChainId,
-      });
-
-      const feeValueWei = formatEther(fees.maxFeePerGas * (gasERC20Approve + gasBridge));
-
-      // console.log(feeValueWei);
-
-      setFeeState({ value: feeValueWei, isPending: false });
-    };
-
-    calculateFees();
-  }, [amountWeiDebounced, sourceChain, selectedToken, bridgeAddress]);
-
   const submitBridge = async (token: string) => {
-    const data = prepareBridgeTransactionData(token, { sourceChain, destinationChain });
+    const data = prepareBridgeTransactionData(token, {
+      sourceChain,
+      destinationChain,
+    });
     if (!data) {
       return;
     }
@@ -147,7 +78,7 @@ function TokenBridge() {
       });
     }
 
-    const args = [l1Address, l2Address, amountWei, 210_000, '0x'];
+    const args = [l1Address, l2Address, parseEther('1'), 210_000, '0x'];
 
     writeContractMutate(
       {
@@ -164,17 +95,19 @@ function TokenBridge() {
     );
   };
 
-  function prepareBridgeTransactionData(token: string, selectedChains: ChainsSelection) {
+  function prepareBridgeTransactionData(
+    token: string,
+    selectedChains: ChainsSelection,
+  ) {
     const tokenData = BRIDGE_TOKENS_MAP.get(token);
     const tokenChains = tokenData?.tokens;
 
-    // if (!tokenChains) {
-    //   toast.error('Token chains not found');
-    //   return;
-    // }
-
-    const sourceChain = CHAINS.find((c) => c.key === selectedChains.sourceChain);
-    const destinationChain = CHAINS.find((c) => c.key === selectedChains.destinationChain);
+    const sourceChain = CHAINS.find(
+      (c) => c.key === selectedChains.sourceChain,
+    );
+    const destinationChain = CHAINS.find(
+      (c) => c.key === selectedChains.destinationChain,
+    );
 
     if (!sourceChain || !destinationChain) {
       return;
@@ -182,27 +115,12 @@ function TokenBridge() {
 
     const isSourceChainL1 = isL1Chain(sourceChain.key);
 
-    // if (isSourceChainL1 && isDestinationChainL1) {
-    //   toast.error('Cannot bridge between L1 chains');
-    //   return;
-    // }
-
-    // if (!isSourceChainL1 && !isDestinationChainL1) {
-    //   toast.error('Cannot bridge between L2 chains (temporary)');
-    //   return;
-    // }
-
     const sourceAddress = isSourceChainL1
       ? tokenChains?.[sourceChain.key]?.address
       : tokenChains?.[destinationChain.key]?.address;
     const targetAddress = isSourceChainL1
       ? tokenChains?.[destinationChain.key]?.address
       : tokenChains?.[sourceChain.key]?.address;
-
-    // if (!sourceAddress || !targetAddress) {
-    //   toast.error('Token not found');
-    //   return;
-    // }
 
     const l1Address = isSourceChainL1 ? sourceAddress : targetAddress;
     const l2Address = isSourceChainL1 ? targetAddress : sourceAddress;
@@ -239,27 +157,19 @@ function TokenBridge() {
         </Box>
 
         <Flex direction={'column'} gap={'1'} width={'100%'} maxWidth={'400px'}>
-          <Flex justify={'between'} align={'center'} gap={'1'}>
-            <Text size={'2'}>Estimated fee:</Text>
-
-            {feeState.isPending ? (
-              <Spinner />
-            ) : !feeState.value ? (
-              <Tooltip content={'No estimate'}>
-                <Text size={'2'}>--</Text>
-              </Tooltip>
-            ) : (
-              <Tooltip content={`≈ ${feeState.value.slice(0, 12)} ETH`}>
-                <Text size={'2'}>≈ {Number(feeState.value).toFixed(4)} ETH</Text>
-              </Tooltip>
-            )}
-          </Flex>
+          <TokenBridgeFee />
         </Flex>
 
-        <Flex direction={'column'} height={'16px'} maxWidth={'310px'} width={'100%'}>
+        <Flex
+          direction={'column'}
+          height={'16px'}
+          maxWidth={'310px'}
+          width={'100%'}
+        >
           {writeContract.error && (
             <Text size='2' color='red' trim='both'>
-              {(writeContract.error as BaseError)?.shortMessage || writeContract.error.message}
+              {(writeContract.error as BaseError)?.shortMessage ||
+                writeContract.error.message}
             </Text>
           )}
         </Flex>
