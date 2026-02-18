@@ -3,6 +3,7 @@ import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
 import type { ChainType } from '@/shared/types/chains.types';
 import { Box, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
 import { ArrowRightLeft } from 'lucide-react';
+import { memo } from 'react';
 import styles from './BridgeSelect.module.css';
 
 const chainsMap = new Map(CHAINS.map((chain) => [chain.key, chain]));
@@ -92,4 +93,4 @@ function BridgeSelect() {
   );
 }
 
-export default BridgeSelect;
+export default memo(BridgeSelect);

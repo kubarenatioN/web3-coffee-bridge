@@ -5,10 +5,10 @@ interface TokenBridgeStore {
   sourceChain: ChainType;
   destinationChain: ChainType;
   token: string;
+  tokenAmount: string;
   setChain: (data: { type: 'source' | 'dest'; value: ChainType }) => void;
-  // setChains: (data: { sourceChain: ChainType; destinationChain: ChainType }) => void;
-  // setSourceChain: (chain: ChainType) => void;
-  // setDestinationChain: (chain: ChainType) => void;
+  setToken: (token: string) => void;
+  setTokenAmount: (amount: string) => void;
 }
 
 const DEFAULT_TOKEN = 'Coffee Token';
@@ -18,6 +18,7 @@ export const useTokenBridgeStore = create<TokenBridgeStore>((set) => {
     sourceChain: 'ethereum-sepolia',
     destinationChain: 'op-sepolia',
     token: DEFAULT_TOKEN,
+    tokenAmount: '',
     setChain: ({ type, value }) => {
       set((state) => {
         if (type === 'source') {
@@ -35,5 +36,7 @@ export const useTokenBridgeStore = create<TokenBridgeStore>((set) => {
         }
       });
     },
+    setToken: (token) => set({ token }),
+    setTokenAmount: (val) => set({ tokenAmount: val }),
   };
 });
