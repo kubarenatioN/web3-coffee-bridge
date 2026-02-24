@@ -8,6 +8,7 @@ import { config } from '@/wagmi.config';
 import { useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { encodeFunctionData, formatEther, parseEther } from 'viem';
+import { useConnection } from 'wagmi';
 import { estimateFeesPerGas, estimateGas } from 'wagmi/actions';
 
 export function useTokenBridgeFee() {
@@ -15,13 +16,17 @@ export function useTokenBridgeFee() {
   const destinationChain = useTokenBridgeStore((s) => s.destinationChain);
   const selectedToken = useTokenBridgeStore((s) => s.token);
   const tokenAmount = useTokenBridgeStore((s) => s.tokenAmount);
-
   const setFeeState = useTokenBridgeStore((s) => s.setFeeState);
 
+  const connection = useConnection();
+
   const bridgeAddress = useTokenBridgeStore(bridgeAddressSelector);
+
   const sourceChainFull = CHAINS.find((c) => c.key === sourceChain);
 
   const [tokenAmountDebounced] = useDebounce(tokenAmount, 500);
+
+  const isConnected = connection.status === 'connected';
 
   useEffect(() => {
     let stale = false;
@@ -99,10 +104,18 @@ export function useTokenBridgeFee() {
       }
     };
 
-    calculateFees();
+    if (isConnected) {
+      calculateFees();
+    }
 
     return () => {
       stale = true;
     };
-  }, [tokenAmountDebounced, selectedToken, sourceChain, destinationChain]);
+  }, [
+    tokenAmountDebounced,
+    selectedToken,
+    sourceChain,
+    destinationChain,
+    isConnected,
+  ]);
 }

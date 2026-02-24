@@ -8,7 +8,12 @@ import { Box, Button, Flex, Spinner, Text } from '@radix-ui/themes';
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { BaseError, parseEther } from 'viem';
-import { useChainId, useSwitchChain, useWriteContract } from 'wagmi';
+import {
+  useChainId,
+  useConnection,
+  useSwitchChain,
+  useWriteContract,
+} from 'wagmi';
 
 function TokenBridgeSubmit() {
   const sourceChain = useTokenBridgeStore((state) => state.sourceChain);
@@ -21,6 +26,7 @@ function TokenBridgeSubmit() {
 
   const writeContract = useWriteContract();
 
+  const connection = useConnection();
   const currentChainId = useChainId();
   const switchChain = useSwitchChain();
 
@@ -90,13 +96,15 @@ function TokenBridgeSubmit() {
     );
   };
 
+  const connected = connection.status === 'connected';
+
   return (
     <Flex direction={'column'}>
       <Box width={'100%'} asChild>
         <Button
           size={'3'}
           onClick={() => submitBridge()}
-          disabled={writeContract.isPending}
+          disabled={writeContract.isPending || !connected}
         >
           {writeContract.isPending ? <Spinner /> : 'Send'}
         </Button>
