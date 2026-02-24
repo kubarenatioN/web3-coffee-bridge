@@ -106,7 +106,15 @@ function TokenBridgeSubmit() {
           onClick={() => submitBridge()}
           disabled={writeContract.isPending || !connected}
         >
-          {writeContract.isPending ? <Spinner /> : 'Send'}
+          {connected ? (
+            writeContract.isPending ? (
+              <Spinner />
+            ) : (
+              'Submit'
+            )
+          ) : (
+            'Connect your wallet'
+          )}
         </Button>
       </Box>
 

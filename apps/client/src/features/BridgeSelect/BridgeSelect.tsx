@@ -18,6 +18,10 @@ function BridgeSelect({
   destinationChain,
   onChange,
 }: BridgeSelectProps) {
+  const onSwapChains = () => {
+    onChange({ type: 'source', value: destinationChain });
+  };
+
   return (
     <Grid
       areas={{
@@ -65,7 +69,14 @@ function BridgeSelect({
           xs: 'flex',
         }}
       >
-        <IconButton size={'2'} variant='outline' radius='full'>
+        <IconButton
+          size={'2'}
+          variant='outline'
+          radius='full'
+          onClick={() => {
+            onSwapChains();
+          }}
+        >
           <ArrowRightLeft size={14} />
         </IconButton>
       </Flex>

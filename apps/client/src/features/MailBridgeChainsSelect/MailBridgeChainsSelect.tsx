@@ -1,12 +1,12 @@
-import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
+import { useMailBridgeStore } from '@/shared/store/useMailBridgeStore';
 import { BridgeSelect } from '../BridgeSelect';
 
 function MailBridgeChainsSelect() {
-  const sourceChain = useTokenBridgeStore((state) => state.sourceChain);
-  const destinationChain = useTokenBridgeStore(
+  const sourceChain = useMailBridgeStore((state) => state.sourceChain);
+  const destinationChain = useMailBridgeStore(
     (state) => state.destinationChain,
   );
-  const setChain = useTokenBridgeStore((state) => state.setChain);
+  const setChain = useMailBridgeStore((state) => state.setChain);
 
   return (
     <BridgeSelect

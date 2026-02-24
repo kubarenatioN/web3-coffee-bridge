@@ -3,6 +3,7 @@ import TokenBridgeFee from '@/features/TokenBridgeFee/TokenBridgeFee';
 import TokenBridgeSubmit from '@/features/TokenBridgeSubmit/TokenBridgeSubmit';
 import TokenInput from '@/features/TokenInput/TokenInput';
 import { Box, Flex, Heading, Text } from '@radix-ui/themes';
+import TokenBridgeHistory from '../TokenBridgeHistory/TokenBridgeHistory';
 
 function TokenBridge() {
   return (
@@ -25,6 +26,8 @@ function TokenBridge() {
           <TokenBridgeFee />
         </Flex>
       </Flex>
+
+      <TokenBridgeHistory />
     </Flex>
   );
 }

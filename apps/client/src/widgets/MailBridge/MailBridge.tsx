@@ -1,5 +1,9 @@
 import MailBridgeChainsSelect from '@/features/MailBridgeChainsSelect/MailBridgeChainsSelect';
+import MailBridgeFee from '@/features/MailBridgeFee/MailBridgeFee';
+import MailBridgeInput from '@/features/MailBridgeInput/MailBridgeInput';
+import MailBridgeSubmit from '@/features/MailBridgeSubmit/MailBridgeSubmit';
 import { Box, Flex, Heading, Text } from '@radix-ui/themes';
+import TokenBridgeHistory from '../TokenBridgeHistory/TokenBridgeHistory';
 
 function MailBridge() {
   return (
@@ -14,16 +18,19 @@ function MailBridge() {
       <MailBridgeChainsSelect />
 
       <Flex direction='column' align={'center'} gap={'2'}>
-        {/* <TokenInput /> */}
+        <MailBridgeInput />
 
         <Box maxWidth={'310px'} width={'100%'}>
-          {/* <TokenBridgeSubmit /> */}
+          <MailBridgeSubmit />
         </Box>
 
         <Flex direction={'column'} width={'100%'} maxWidth={'400px'}>
-          {/* <TokenBridgeFee /> */}
+          <MailBridgeFee />
         </Flex>
       </Flex>
+
+      {/* TODO: replace by mail bridge history */}
+      <TokenBridgeHistory />
     </Flex>
   );
 }

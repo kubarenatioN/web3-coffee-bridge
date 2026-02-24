@@ -9,6 +9,7 @@ export interface MailBridgeStore {
   feeAmount: string;
   feePending: boolean;
   setChain: (data: { type: 'source' | 'dest'; value: ChainType }) => void;
+  setMessage: (message: string) => void;
   setFeeAmount: (amount: string) => void;
   setFeePending: (pending: boolean) => void;
   setFeeState: (feeAmount: string, feePending: boolean) => void;
@@ -31,6 +32,7 @@ export const useMailBridgeStore = create<MailBridgeStore>((set) => {
         return { sourceChain, destinationChain };
       });
     },
+    setMessage: (message) => set({ message }),
     setFeeAmount: (val) => set({ feeAmount: val }),
     setFeePending: (val) => set({ feePending: val }),
     setFeeState: (feeAmount, feePending) => set({ feeAmount, feePending }),
