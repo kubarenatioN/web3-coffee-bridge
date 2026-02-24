@@ -51,7 +51,7 @@ function TokenBridgeSubmit() {
       destinationChain,
     );
 
-    if (!addresses || !sourceChainFull) {
+    if (!addresses || !sourceChainFull || !amount) {
       return;
     }
 

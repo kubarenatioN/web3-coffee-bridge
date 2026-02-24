@@ -1,4 +1,4 @@
-import { BridgeSelect } from '@/features/BridgeSelect';
+import TokenBridgeChainsSelect from '@/features/TokenBridgeChainsSelect/TokenBridgeChainsSelect';
 import TokenBridgeFee from '@/features/TokenBridgeFee/TokenBridgeFee';
 import TokenBridgeSubmit from '@/features/TokenBridgeSubmit/TokenBridgeSubmit';
 import TokenInput from '@/features/TokenInput/TokenInput';
@@ -12,7 +12,7 @@ function TokenBridge() {
         <Text>Choose source and destination chains and make a transfer</Text>
       </Flex>
 
-      <BridgeSelect />
+      <TokenBridgeChainsSelect />
 
       <Flex direction='column' align={'center'} gap={'2'}>
         <TokenInput />

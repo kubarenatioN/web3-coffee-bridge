@@ -1,5 +1,4 @@
 import { CHAINS } from '@/shared/config/chains';
-import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
 import type { ChainType } from '@/shared/types/chains.types';
 import { Box, Flex, Grid, IconButton, Select, Text } from '@radix-ui/themes';
 import { ArrowRightLeft } from 'lucide-react';
@@ -8,13 +7,17 @@ import styles from './BridgeSelect.module.css';
 
 const chainsMap = new Map(CHAINS.map((chain) => [chain.key, chain]));
 
-function BridgeSelect() {
-  const sourceChain = useTokenBridgeStore((state) => state.sourceChain);
-  const destinationChain = useTokenBridgeStore(
-    (state) => state.destinationChain,
-  );
-  const setChain = useTokenBridgeStore((state) => state.setChain);
+interface BridgeSelectProps {
+  sourceChain: ChainType;
+  destinationChain: ChainType;
+  onChange: (data: { type: 'source' | 'dest'; value: ChainType }) => void;
+}
 
+function BridgeSelect({
+  sourceChain,
+  destinationChain,
+  onChange,
+}: BridgeSelectProps) {
   return (
     <Grid
       areas={{
@@ -35,7 +38,7 @@ function BridgeSelect() {
         <Select.Root
           value={sourceChain}
           onValueChange={(val: ChainType) => {
-            setChain({ type: 'source', value: val });
+            onChange({ type: 'source', value: val });
           }}
         >
           <Select.Trigger className={styles['select-trigger']}>
@@ -74,7 +77,7 @@ function BridgeSelect() {
         <Select.Root
           value={destinationChain}
           onValueChange={(val: ChainType) => {
-            setChain({ type: 'dest', value: val });
+            onChange({ type: 'dest', value: val });
           }}
         >
           <Select.Trigger className={styles['select-trigger']}>

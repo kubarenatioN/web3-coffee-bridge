@@ -2,29 +2,23 @@ import { create } from 'zustand';
 import { getChainsPair } from '../helpers/chain.helper';
 import type { ChainType } from '../types/chains.types';
 
-export interface TokenBridgeStore {
+export interface MailBridgeStore {
   sourceChain: ChainType;
   destinationChain: ChainType;
-  token: string;
-  tokenAmount: string;
+  message: string;
   feeAmount: string;
   feePending: boolean;
   setChain: (data: { type: 'source' | 'dest'; value: ChainType }) => void;
-  setToken: (token: string) => void;
-  setTokenAmount: (amount: string) => void;
   setFeeAmount: (amount: string) => void;
   setFeePending: (pending: boolean) => void;
   setFeeState: (feeAmount: string, feePending: boolean) => void;
 }
 
-const DEFAULT_TOKEN = 'Coffee Token';
-
-export const useTokenBridgeStore = create<TokenBridgeStore>((set) => {
+export const useMailBridgeStore = create<MailBridgeStore>((set) => {
   return {
     sourceChain: 'ethereum-sepolia',
     destinationChain: 'op-sepolia',
-    token: DEFAULT_TOKEN,
-    tokenAmount: '',
+    message: '',
     feeAmount: '',
     feePending: false,
     setChain: ({ type, value }) => {
@@ -37,8 +31,6 @@ export const useTokenBridgeStore = create<TokenBridgeStore>((set) => {
         return { sourceChain, destinationChain };
       });
     },
-    setToken: (token) => set({ token }),
-    setTokenAmount: (val) => set({ tokenAmount: val }),
     setFeeAmount: (val) => set({ feeAmount: val }),
     setFeePending: (val) => set({ feePending: val }),
     setFeeState: (feeAmount, feePending) => set({ feeAmount, feePending }),
