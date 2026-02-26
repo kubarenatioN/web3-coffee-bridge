@@ -47,3 +47,5 @@ export const L1_CHAINS = [...L1_CHAINS_TESTNETS];
 export const L2_CHAINS = [...L2_CHAINS_TESTNETS];
 
 export const CHAINS = [...L1_CHAINS, ...L2_CHAINS] as const;
+
+export const CHAINS_MAP = new Map(CHAINS.map((c) => [c.key, c]));

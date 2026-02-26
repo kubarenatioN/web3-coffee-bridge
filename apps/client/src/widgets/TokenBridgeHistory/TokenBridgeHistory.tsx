@@ -1,22 +1,64 @@
-import { Flex, Heading, Text } from '@radix-ui/themes';
+import TokenBridgeHistoryTable from '@/features/TokenBridgeHistoryTable';
+import { useTokenBridgeHistory } from '@/features/TokenBridgeHistoryTable/useTokenBridgeHistory';
+import { Box, Flex, Heading, Spinner, Text } from '@radix-ui/themes';
+import { useConnection } from 'wagmi';
 
 function TokenBridgeHistory() {
-  return (
-    <Flex direction={'column'}>
-      <Heading size={'5'} as='h2'>
-        Recent transactions
-      </Heading>
-      <Text>View your recent transactions</Text>
+  const connection = useConnection();
+  const user = connection.address;
 
-      <Flex direction={'column'} gap={'2'}>
-        {[1, 2, 3, 4].map((el) => {
-          return (
-            <Flex key={el} direction={'column'}>
-              <Text>Transaction #{el}</Text>
-              <Text>Amount: 13.00 COFFEE</Text>
-            </Flex>
-          );
-        })}
+  const { data, isLoading } = useTokenBridgeHistory(user, 0, 10);
+
+  console.log(data);
+
+  const records = data?.erc20BridgeInitiateds ?? [];
+
+  return (
+    <Flex
+      direction={'column'}
+      gap={'3'}
+      pb={'6'}
+      pt={'4'}
+      style={{
+        borderTop: '1px solid var(--gray-a8)',
+      }}
+    >
+      <Box>
+        <Heading size={'5'} as='h2'>
+          Recent transactions
+        </Heading>
+        <Text>Your recent operations are show here</Text>
+      </Box>
+
+      <Flex>
+        {!isLoading && records.length > 0 && (
+          <TokenBridgeHistoryTable data={records} />
+        )}
+        {!isLoading && records.length === 0 && (
+          <Flex
+            width={'100%'}
+            direction={'column'}
+            align={'center'}
+            justify={'center'}
+            gap={'1'}
+            minHeight={'200px'}
+          >
+            <Text>No transactions found</Text>
+          </Flex>
+        )}
+        {isLoading && (
+          <Flex
+            width={'100%'}
+            direction={'column'}
+            align={'center'}
+            justify={'center'}
+            gap={'1'}
+            minHeight={'200px'}
+          >
+            <Spinner size={'3'} />
+            <Text size={'4'}>Loading data...</Text>
+          </Flex>
+        )}
       </Flex>
     </Flex>
   );
