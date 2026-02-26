@@ -9,8 +9,6 @@ function TokenBridgeHistory() {
 
   const { data, isLoading } = useTokenBridgeHistory(user, 0, 10);
 
-  console.log(data);
-
   const records = data?.erc20BridgeInitiateds ?? [];
 
   return (

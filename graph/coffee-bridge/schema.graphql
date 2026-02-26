@@ -105,3 +105,14 @@ type Initialized @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
+type SendMessageCall @entity(immutable: true) {
+  id: Bytes!
+  from: Bytes! # address
+  message: String!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+  mailboxAddress: Bytes! # address
+  chainId: Int! # chain ID on the sender side
+}

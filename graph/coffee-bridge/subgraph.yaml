@@ -94,3 +94,24 @@ dataSources:
       abis: *L1BridgeCommonAbis
       eventHandlers: *L1BridgeCommonEventHandlers
       file: ./src/L1StandardBridge.mapping.ts
+
+  - kind: ethereum
+    name: L1CoffeeMailBox
+    network: sepolia
+    source:
+      address: "0x30a3509D71dce399dD99DD520e31F5BAc3f27b44"
+      abi: BaseCoffeeMailBox
+      startBlock: 10114420
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - SendMessageCall
+      abis:
+        - name: BaseCoffeeMailBox
+          file: ./abis/BaseCoffeeMailBox.json
+      callHandlers:
+        - function: sendMessage(string)
+          handler: handleSendMessage
+      file: ./src/L1CoffeeMailBox.mapping.ts
