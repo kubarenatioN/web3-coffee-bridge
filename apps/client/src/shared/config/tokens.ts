@@ -1,3 +1,4 @@
+import type { Address } from 'viem';
 import type { ChainType } from '../types/chains.types';
 
 interface Token {
@@ -6,7 +7,7 @@ interface Token {
   decimals: number;
   icon?: string;
   native?: boolean;
-  tokens?: Partial<Record<ChainType, { address: string }>>;
+  tokens?: Partial<Record<ChainType, { address: Address }>>;
 }
 
 export const BRIDGE_TOKENS: Token[] = [
@@ -24,7 +25,7 @@ export const BRIDGE_TOKENS: Token[] = [
     icon: 'https://ethereum-optimism.github.io/data/PEPE/logo.svg',
     tokens: {
       'ethereum-sepolia': {
-        address: '??',
+        address: '0x',
       },
       // ethereum: {
       //   address: '0x6982508145454Ce325dDbE47a25d4ec3d2311933',

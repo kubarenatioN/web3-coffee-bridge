@@ -19,6 +19,7 @@ function MailBridgeSubmit() {
     (state) => state.destinationChain,
   );
   const message = useMailBridgeStore((state) => state.message);
+  const setMessage = useMailBridgeStore((state) => state.setMessage);
   const mailboxAddress = useMailBridgeStore(mailboxAddressSelector);
 
   const connection = useConnection();
@@ -48,6 +49,7 @@ function MailBridgeSubmit() {
 
     if (formattedMsg.length === 0) {
       toast.error('Message cannot be empty');
+      setMessage('');
       return;
     }
     if (formattedMsg.length > 64) {
@@ -71,6 +73,7 @@ function MailBridgeSubmit() {
       {
         onSuccess: () => {
           toast.success('Message sent!', { autoClose: 3000 });
+          setMessage('');
         },
       },
     );

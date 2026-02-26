@@ -1,11 +1,13 @@
+import { IERC20_ABI } from '@/contracts/abi/IERC20.abi';
 import { L1_STANDARD_BRIDGE_ABI } from '@/contracts/abi/L1StandardBridge.abi';
 import { CHAINS } from '@/shared/config/chains';
 import { isL1Chain } from '@/shared/helpers/chain.helper';
 import { getTokenBridgeAddresses } from '@/shared/helpers/token-bridge.helpers';
 import { bridgeAddressSelector } from '@/shared/store/tokenBridgeStoreSelectors';
 import { useTokenBridgeStore } from '@/shared/store/useTokenBridgeStore';
+import { config as wagmiConfig } from '@/wagmi.config';
 import { Box, Button, Flex, Spinner, Text } from '@radix-ui/themes';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { BaseError, parseEther } from 'viem';
 import {
@@ -14,6 +16,7 @@ import {
   useSwitchChain,
   useWriteContract,
 } from 'wagmi';
+import { readContract, waitForTransactionReceipt } from 'wagmi/actions';
 
 function TokenBridgeSubmit() {
   const sourceChain = useTokenBridgeStore((state) => state.sourceChain);
@@ -21,43 +24,47 @@ function TokenBridgeSubmit() {
     (state) => state.destinationChain,
   );
   const amount = useTokenBridgeStore((state) => state.tokenAmount);
+  const setAmount = useTokenBridgeStore((state) => state.setTokenAmount);
   const bridgeAddress = useTokenBridgeStore(bridgeAddressSelector);
   const selectedToken = useTokenBridgeStore((state) => state.token);
 
-  const writeContract = useWriteContract();
+  const bridgeWrite = useWriteContract();
+  const tokenWrite = useWriteContract();
 
   const connection = useConnection();
   const currentChainId = useChainId();
   const switchChain = useSwitchChain();
 
-  const { mutate: writeContractMutate } = writeContract;
+  const [approvalPending, setApprovalPending] = useState(false);
+
+  const userAddress = connection.address;
+
+  const tokenAddresses = getTokenBridgeAddresses(
+    selectedToken,
+    sourceChain,
+    destinationChain,
+  );
+
+  const { localAddress, remoteAddress } = tokenAddresses ?? {};
 
   const sourceChainFull = CHAINS.find((c) => c.key === sourceChain);
 
   useEffect(
     () => {
-      if (writeContract.error) {
-        writeContract.reset();
+      if (bridgeWrite.error) {
+        bridgeWrite.reset();
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sourceChain, destinationChain, selectedToken, amount],
+    [sourceChain, destinationChain, selectedToken, amount, connection.address],
   );
 
   const submitBridge = async () => {
-    const addresses = getTokenBridgeAddresses(
-      selectedToken,
-      sourceChain,
-      destinationChain,
-    );
-
-    if (!addresses || !sourceChainFull || !amount) {
+    if (!sourceChainFull || !amount || !userAddress) {
       return;
     }
 
-    const { l1Address, l2Address } = addresses;
-
-    if (!l1Address || !l2Address) {
+    if (!localAddress || !remoteAddress) {
       toast.error('Token not found');
       return;
     }
@@ -79,50 +86,84 @@ function TokenBridgeSubmit() {
       });
     }
 
-    const args = [l1Address, l2Address, parseEther(amount), 210_000, '0x'];
+    const amountWei = parseEther(amount);
 
-    writeContractMutate(
-      {
-        address: bridgeAddress,
-        abi: L1_STANDARD_BRIDGE_ABI,
-        functionName: 'bridgeERC20',
-        args,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Transaction submitted', { autoClose: 3000 });
+    const args = [localAddress, remoteAddress, amountWei, 210_000, '0x'];
+
+    try {
+      const currentAllowance = await readContract(wagmiConfig, {
+        address: localAddress,
+        abi: IERC20_ABI,
+        functionName: 'allowance',
+        args: [userAddress, bridgeAddress],
+      });
+
+      if (currentAllowance < amountWei) {
+        setApprovalPending(true);
+        const approveTxHash = await tokenWrite.mutateAsync({
+          address: localAddress,
+          abi: IERC20_ABI,
+          functionName: 'approve',
+          args: [bridgeAddress, amountWei],
+        });
+
+        await waitForTransactionReceipt(wagmiConfig, {
+          hash: approveTxHash,
+          confirmations: 1,
+        });
+      }
+
+      bridgeWrite.mutate(
+        {
+          address: bridgeAddress,
+          abi: L1_STANDARD_BRIDGE_ABI,
+          functionName: 'bridgeERC20',
+          args,
         },
-      },
-    );
+        {
+          onSuccess: () => {
+            toast.success('Transaction submitted', { autoClose: 3000 });
+            setAmount('');
+          },
+        },
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        'Oops! Error appeared while processing your transaction. Please try again later.',
+      );
+    } finally {
+      setApprovalPending(false);
+    }
   };
 
   const connected = connection.status === 'connected';
 
+  const bridgePending = bridgeWrite.isPending;
+  const bridgeError = bridgeWrite.error;
+
   return (
     <Flex direction={'column'}>
       <Box width={'100%'} asChild>
-        <Button
-          size={'3'}
-          onClick={() => submitBridge()}
-          disabled={writeContract.isPending || !connected}
-        >
-          {connected ? (
-            writeContract.isPending ? (
-              <Spinner />
-            ) : (
-              'Submit'
-            )
-          ) : (
-            'Connect your wallet'
-          )}
-        </Button>
+        {!connected ? (
+          <Button size={'3'} disabled>
+            Connect your wallet
+          </Button>
+        ) : (
+          <Button
+            size={'3'}
+            onClick={() => submitBridge()}
+            disabled={bridgePending || approvalPending}
+          >
+            {bridgePending || approvalPending ? <Spinner /> : 'Submit'}
+          </Button>
+        )}
       </Box>
 
-      <Flex direction={'column'} height={'16px'} width={'100%'} mt={'1'}>
-        {writeContract.error && (
+      <Flex direction={'column'} minHeight={'16px'} width={'100%'} mt={'1'}>
+        {bridgeError && (
           <Text size='2' color='red' trim='both'>
-            {(writeContract.error as BaseError)?.shortMessage ||
-              writeContract.error.message}
+            {(bridgeError as BaseError)?.shortMessage || bridgeError.message}
           </Text>
         )}
       </Flex>

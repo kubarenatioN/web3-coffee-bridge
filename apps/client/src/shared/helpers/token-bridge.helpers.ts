@@ -26,10 +26,12 @@ export function getTokenBridgeAddresses(
   const l2Address = isSourceChainL1 ? targetAddress : sourceAddress;
 
   const localAddress = isL1Chain(sourceChain) ? l1Address : l2Address;
+  const remoteAddress = isL1Chain(sourceChain) ? l2Address : l1Address;
 
   return {
     l1Address,
     l2Address,
     localAddress,
+    remoteAddress,
   };
 }

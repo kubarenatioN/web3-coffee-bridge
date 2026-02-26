@@ -58,11 +58,12 @@ function TokenInput() {
       width={'100%'}
     >
       <TextField.Root
-        placeholder='1.25'
+        placeholder='Enter amount'
         variant='soft'
         size='3'
         value={amount}
         name='amount'
+        inputMode='decimal'
         onChange={handleAmountChange}
         onBlur={formatAmountOnBlur}
       >
