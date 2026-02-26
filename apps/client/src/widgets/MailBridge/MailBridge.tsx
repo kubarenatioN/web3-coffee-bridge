@@ -3,7 +3,7 @@ import MailBridgeFee from '@/features/MailBridgeFee/MailBridgeFee';
 import MailBridgeInput from '@/features/MailBridgeInput/MailBridgeInput';
 import MailBridgeSubmit from '@/features/MailBridgeSubmit/MailBridgeSubmit';
 import { Box, Flex, Heading, Text } from '@radix-ui/themes';
-import TokenBridgeHistory from '../TokenBridgeHistory/TokenBridgeHistory';
+import MailBridgeHistory from '../MailBridgeHistory/MailBridgeHistory';
 
 function MailBridge() {
   return (
@@ -29,8 +29,7 @@ function MailBridge() {
         </Flex>
       </Flex>
 
-      {/* TODO: replace by mail bridge history */}
-      <TokenBridgeHistory />
+      <MailBridgeHistory />
     </Flex>
   );
 }
